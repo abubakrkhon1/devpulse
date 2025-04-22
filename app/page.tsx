@@ -53,7 +53,10 @@ export default function ProjectAppLanding() {
             >
               Log in
             </Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 dark:text-white">
+            <Button
+              onClick={() => router.push("/signup")}
+              className="bg-indigo-600 hover:bg-indigo-700 dark:text-white"
+            >
               Start Free Trial
             </Button>
           </div>

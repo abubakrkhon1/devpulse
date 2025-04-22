@@ -25,11 +25,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -39,10 +44,33 @@ export function LoginForm({
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof loginFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof loginFormSchema>) {
+    setLoading(true);
+
+    const res = await fetch("/api/auth/sign-in", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 401 && data.message === "Passwords do not match!") {
+        form.setError("password", {
+          type: "manual",
+          message: data.message,
+        });
+      } else {
+        form.setError("password", {
+          type: "manual",
+          message: data.message || "Something went wrong",
+        });
+      }
+    } else {
+      router.push("/dashboard");
+    }
+
+    setLoading(false);
   }
 
   return (

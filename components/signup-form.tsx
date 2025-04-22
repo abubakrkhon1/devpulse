@@ -1,6 +1,8 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +32,9 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   const form = useForm<z.infer<typeof signUpFormSchema>>({
     resolver: zodResolver(signUpFormSchema),
     defaultValues: {
@@ -39,9 +44,34 @@ export function SignUpForm({
     },
   });
 
-  function onSubmit(values: z.infer<typeof signUpFormSchema>) {
-    console.log(values);
-  }
+  const onSubmit = async (values: z.infer<typeof signUpFormSchema>) => {
+    setLoading(true);
+
+    const res = await fetch("/api/auth/sign-up", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (res.status === 400 && data.message === "User already exists") {
+        form.setError("confirmPassword", {
+          type: "manual",
+          message: data.message,
+        });
+      } else {
+        form.setError("confirmPassword", {
+          type: "manual",
+          message: data.message || "Something went wrong",
+        });
+      }
+    } else {
+      router.push("/login");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -148,9 +178,12 @@ export function SignUpForm({
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-indigo-500 hover:bg-indigo-600"
+                    className={`w-full bg-indigo-500 hover:bg-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      loading ? "animate-pulse" : ""
+                    }`}
+                    disabled={loading}
                   >
-                    Sign Up
+                    {loading ? "Loading..." : "Sign Up"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">
