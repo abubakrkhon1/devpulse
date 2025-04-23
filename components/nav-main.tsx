@@ -31,7 +31,7 @@ export function NavMain({
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               tooltip="New Project"
-              className="cursor-pointer mb-2 bg-primary text-secondary hover:bg-primary/70 hover:text-secondary w-fit transition ease-linear"
+              className="cursor-pointer mb-2 bg-primary text-secondary dark:text-white hover:bg-primary/70 hover:text-secondary w-fit transition ease-linear"
             >
               <IconCirclePlusFilled />
               <span>New Project</span>

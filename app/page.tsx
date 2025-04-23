@@ -34,10 +34,10 @@ export default function ProjectAppLanding() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 shadow-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 ">
           <div className="flex items-center gap-2">
             <Layers className="h-6 w-6 text-indigo-500" />
             <span className="font-bold text-xl">DevPulse</span>
@@ -55,6 +55,13 @@ export default function ProjectAppLanding() {
           </nav>
           {user ? (
             <div className="flex items-center gap-4">
+              <Button
+                onClick={() => router.push("/login")}
+                variant="ghost"
+                className="hidden md:flex dark:hover:bg-primary/20"
+              >
+                Logout
+              </Button>
               <Avatar className="cursor-pointer hover:scale-105 transition">
                 <AvatarImage src="https://github.com/shadcn.png" />
                 <AvatarFallback>P</AvatarFallback>
@@ -114,9 +121,9 @@ export default function ProjectAppLanding() {
         </div>
         <div className="w-full h-[400px] overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
           <img
-            src="/api/placeholder/1200/600"
+            src="hero.png"
             alt="DevPulse Dashboard"
-            className="w-full object-cover"
+            className="w-full h-full"
           />
         </div>
       </section>
@@ -445,7 +452,11 @@ export default function ProjectAppLanding() {
               >
                 <CardHeader>
                   <div className="mb-4 flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-700" />
+                    <img
+                      src="https://github.com/shadcn.png"
+                      alt="Profile Pic"
+                      className="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-700"
+                    />
                     <div>
                       <h4 className="font-semibold">{name}</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
