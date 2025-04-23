@@ -28,7 +28,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export default function ProjectAppLanding() {
   const router = useRouter();
   const { user, loading, error } = useUser();
-  console.log(user, loading, error);
+  const heroBtnClick = () => {
+    if (user) router.push("/dashboard");
+    else router.push("/sign-up");
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -96,9 +99,9 @@ export default function ProjectAppLanding() {
           <Button
             size="lg"
             className="bg-indigo-600 hover:bg-indigo-700 px-8 dark:text-white"
-            onClick={() => router.push("/dashboard")}
+            onClick={heroBtnClick}
           >
-            Request Demo
+            {user ? "Dashboard" : "Request Demo"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <Button

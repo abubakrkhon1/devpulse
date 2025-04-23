@@ -1,102 +1,165 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+// components/ProjectSnapshotCards.tsx
+"use client";
 
-import { Badge } from "@/components/ui/badge"
+import {
+  IconCheck,
+  IconAlertTriangle,
+  IconCalendar,
+  IconPlus,
+  IconBulb,
+} from "@tabler/icons-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+  CardContent,
+  CardFooter,
+  CardAction,
+} from "@/components/ui/card";
+
+interface ActiveProject {
+  name: string;
+  status: "On Track" | "Behind";
+  progress: number;
+}
+
+interface Deadline {
+  task: string;
+  project: string;
+  due: string;
+}
+
+interface AtRisk {
+  project: string;
+  reason: string;
+}
 
 export function SectionCards() {
+  const sections = [
+    {
+      key: "actions",
+      title: "Quick Actions",
+      Icon: IconBulb,
+      items: [] as never[],
+    },
+    {
+      key: "active",
+      title: "Active Projects",
+      Icon: IconCheck,
+      items: [
+        { name: "Alpha", status: "On Track", progress: 72 },
+        { name: "Beta", status: "Behind", progress: 45 },
+        { name: "Gamma", status: "On Track", progress: 88 },
+      ] as ActiveProject[],
+    },
+    {
+      key: "deadlines",
+      title: "Upcoming Deadlines",
+      Icon: IconCalendar,
+      items: [
+        { task: "Finalize UI", project: "Alpha", due: "Apr 25" },
+        { task: "DB Migration", project: "Beta", due: "Apr 27" },
+        { task: "Launch Campaign", project: "Delta", due: "Apr 29" },
+      ] as Deadline[],
+    },
+    {
+      key: "atrisk",
+      title: "On-hold / At-Risk",
+      Icon: IconAlertTriangle,
+      items: [
+        { project: "Epsilon", reason: "No updates for 5 days" },
+        { project: "Zeta", reason: "Missing resources" },
+      ] as AtRisk[],
+    },
+  ];
+
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Visitors for the last 6 months
-          </div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>New Customers</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingDown />
-              -20%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <IconTrendingDown className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Acquisition needs attention
-          </div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Active Accounts</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            45,678
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +12.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
-        </CardFooter>
-      </Card>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Growth Rate</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.5%
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +4.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
-        </CardFooter>
-      </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+      {sections.map(({ key, title, Icon, items }) => (
+        <Card key={key}>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle>{title}</CardTitle>
+            <Icon className="h-5 w-5 text-gray-500" />
+          </CardHeader>
+
+          <CardContent>
+            {key === "actions" ? (
+              <div className="flex flex-col space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <IconPlus className="h-4 w-4" /> New Project
+                </Button>
+                <Button className="w-full flex items-center justify-center gap-2">
+                  <IconBulb className="h-4 w-4" /> Brainstorm Idea
+                </Button>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {key === "active" &&
+                  (items as ActiveProject[]).map(
+                    ({ name, status, progress }) => (
+                      <li
+                        key={name}
+                        className="flex justify-between items-center"
+                      >
+                        <span>{name}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={
+                              status === "On Track"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                          >
+                            {status}
+                          </Badge>
+                          <span className="font-mono text-sm">{progress}%</span>
+                        </div>
+                      </li>
+                    )
+                  )}
+
+                {key === "deadlines" &&
+                  (items as Deadline[]).map(({ task, project, due }, i) => (
+                    <li
+                      key={`${task}-${i}`}
+                      className="flex justify-between items-center"
+                    >
+                      <span>
+                        {task}{" "}
+                        <em className="text-muted-foreground">({project})</em>
+                      </span>
+                      <Badge variant="outline">{due}</Badge>
+                    </li>
+                  ))}
+
+                {key === "atrisk" &&
+                  (items as AtRisk[]).map(({ project, reason }) => (
+                    <li
+                      key={project}
+                      className="flex justify-between items-center"
+                    >
+                      <span>{project}</span>
+                      <Badge variant="default">{reason}</Badge>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </CardContent>
+
+          {key !== "actions" && (
+            <CardFooter className="flex justify-end">
+              <CardAction className="cursor-pointer hover:bg-primary hover:text-secondary p-2 rounded transition duration-300">
+                View all
+              </CardAction>
+            </CardFooter>
+          )}
+        </Card>
+      ))}
     </div>
-  )
+  );
 }

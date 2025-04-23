@@ -46,6 +46,7 @@ export async function GET() {
       name: user.name!,
       email: user.email!,
       createdAt: user.createdAt.toISOString(),
+      avatar: user.avatar
     };
 
     return NextResponse.json({ user: userWithoutPassword });
