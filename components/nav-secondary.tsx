@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
-interface NavSecondaryProps extends React.ComponentPropsWithoutRef<typeof SidebarGroup> {
+interface NavSecondaryProps
+  extends React.ComponentPropsWithoutRef<typeof SidebarGroup> {
   items: {
     title: string;
     url: string;
@@ -40,7 +41,10 @@ export function NavSecondary({ items, ...props }: NavSecondaryProps) {
             // for “Search”, render an AlertDialog instead of a plain link
             if (item.title === "Search") {
               return (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem
+                  key={item.title}
+                  className="hover:bg-primary/10 rounded transition"
+                >
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <SidebarMenuButton>
@@ -70,7 +74,10 @@ export function NavSecondary({ items, ...props }: NavSecondaryProps) {
 
             // otherwise just link out
             return (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem
+                key={item.title}
+                className="hover:bg-primary/10 rounded transition"
+              >
                 <SidebarMenuButton asChild>
                   <a href={item.url} className="flex items-center">
                     <item.icon className="mr-2" />

@@ -78,7 +78,7 @@ export default function ProjectAppLanding() {
                   Log in
                 </Button>
                 <Button
-                  onClick={() => router.push("/signup")}
+                  onClick={() => router.push("/sign-up")}
                   className="bg-indigo-600 hover:bg-indigo-700 dark:text-white"
                 >
                   Start Free Trial

@@ -153,8 +153,14 @@ export function SectionCards() {
 
           {key !== "actions" && (
             <CardFooter className="flex justify-end">
-              <CardAction className="cursor-pointer hover:bg-primary hover:text-secondary p-2 rounded transition duration-300">
-                View all
+              <CardAction className="group relative inline-block p-2 rounded overflow-visible hover:cursor-pointer">
+                {/* the actual link text */}
+                <span className="relative z-10">View all</span>
+
+                {/* the animated underline */}
+                <span
+                  className="absolute left-0 bottom-0 h-[2px] w-full bg-current transform scale-x-0 origin-left transition-transform duration-300 ease-out group-hover:scale-x-100"
+                />
               </CardAction>
             </CardFooter>
           )}

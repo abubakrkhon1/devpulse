@@ -1,10 +1,10 @@
-import clientPromise from "@/lib/mongo.ts";
+import clientPromise from "@/lib/mongo";
 import bcrypt from "bcrypt";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
 
   try {
@@ -14,7 +14,10 @@ export async function POST(req) {
     const user = await db.collection("users").findOne({ email });
 
     if (!user)
-      return NextResponse.json({ message: "User not found!", status: 404 });
+      return NextResponse.json(
+        { message: "User not found!", status: 404 },
+        { status: 404 }
+      );
 
     const isMatch = await bcrypt.compare(password, user.password);
 
@@ -31,8 +34,6 @@ export async function POST(req) {
     const token = jwt.sign(userFixed, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
-    console.log(token);
-    
 
     const cookiesSet = await cookies();
     cookiesSet.set("token", token, {

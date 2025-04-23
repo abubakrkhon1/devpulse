@@ -76,7 +76,7 @@ export function SignUpForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="bg-white dark:bg-slate-900">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome to Pulse</CardTitle>
           <CardDescription>Create your brand new account</CardDescription>

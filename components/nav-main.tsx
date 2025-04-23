@@ -44,7 +44,7 @@ export function NavMain({
               <SidebarMenuButton
                 tooltip={item.title}
                 onClick={() => router.push(item.url)}
-                className={pathname === item.url ? `bg-primary/30 hover:bg-primary/50 transition` : ``}
+                className={pathname === item.url ? `bg-primary/30 hover:bg-primary/50 transition` : `hover:bg-primary/20 transition`}
               >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>

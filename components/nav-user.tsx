@@ -26,6 +26,29 @@ import {
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 
+const routes = [
+  {
+    name: "Account",
+    url: "/profile",
+    icon: IconUserCircle,
+  },
+  {
+    name: "Billing",
+    url: "/profile",
+    icon: IconCreditCard,
+  },
+  {
+    name: "Notifications",
+    url: "/profile",
+    icon: IconNotification,
+  },
+  {
+    name: "Logout",
+    url: "/logout",
+    icon: IconLogout,
+  },
+];
+
 export function NavUser({
   user,
 }: {
@@ -61,7 +84,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-white"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -82,24 +105,20 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
+              {" "}
+              {routes.map((route) => (
+                <div key={route.name}>
+                  <DropdownMenuItem
+                    onClick={() => router.push(route.url)}
+                    className="transition"
+                  >
+                    <route.icon />
+                    {route.name}
+                  </DropdownMenuItem>
+                  {route.name === "Notifications" && <DropdownMenuSeparator />}
+                </div>
+              ))}
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <IconLogout />
-              Logout
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

@@ -18,14 +18,13 @@ export async function POST(req) {
       );
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await db
-      .collection("users")
-      .insertOne({
-        name,
-        email,
-        password: hashedPassword,
-        createdAt: new Date(),
-      });
+    const result = await db.collection("users").insertOne({
+      name,
+      email,
+      password: hashedPassword,
+      avatar: "https://github.com/shadcn.png",
+      createdAt: new Date(),
+    });
 
     return NextResponse.json({
       message: "User sucessfully created!",

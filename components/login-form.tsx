@@ -74,8 +74,8 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+    <div className={cn("flex flex-col gap-6 ", className)} {...props}>
+      <Card className="bg-white dark:bg-slate-900">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>Login with your account</CardDescription>
@@ -162,14 +162,17 @@ export function LoginForm({
                   ></FormField>
                   <Button
                     type="submit"
-                    className="w-full bg-indigo-500 hover:bg-indigo-600"
+                    className={`w-full bg-indigo-500 hover:bg-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      loading ? "animate-pulse" : ""
+                    }`}
+                    disabled={loading}
                   >
-                    Login
+                    {loading ? "Loading..." : "Sign In"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">
                   Don&apos;t have an account?{" "}
-                  <a href="/signup" className="underline underline-offset-4">
+                  <a href="/sign-up" className="underline underline-offset-4">
                     Sign up
                   </a>
                 </div>
