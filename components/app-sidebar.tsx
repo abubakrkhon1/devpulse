@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="/dashboard">
                 <Layers className="h-8 w-8" />
-                <span className="text-base font-semibold">DevPulse</span>
+                <span className="text-base font-semibold">Pulse</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

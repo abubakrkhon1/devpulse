@@ -40,7 +40,7 @@ export default function ProjectAppLanding() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6 ">
           <div className="flex items-center gap-2">
             <Layers className="h-6 w-6 text-indigo-500" />
-            <span className="font-bold text-xl">DevPulse</span>
+            <span className="font-bold text-xl">Pulse</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             {["Features", "Solutions", "Pricing", "Testimonials"].map((s) => (
@@ -122,7 +122,7 @@ export default function ProjectAppLanding() {
         <div className="w-full h-[400px] overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
           <img
             src="hero.png"
-            alt="DevPulse Dashboard"
+            alt=" Dashboard"
             className="w-full h-full"
           />
         </div>
@@ -221,7 +221,7 @@ export default function ProjectAppLanding() {
               Tailored Solutions for Every Team
             </h2>
             <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
-              Whether you're a startup or an enterprise, DevPulse scales to meet
+              Whether you're a startup or an enterprise, Pulse scales to meet
               your specific project management needs.
             </p>
           </div>
@@ -421,7 +421,7 @@ export default function ProjectAppLanding() {
               Trusted by Industry Leaders
             </h2>
             <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
-              See how DevPulse has transformed project management for teams
+              See how Pulse has transformed project management for teams
               across various industries.
             </p>
           </div>
@@ -431,19 +431,19 @@ export default function ProjectAppLanding() {
                 name: "Sarah Johnson",
                 role: "CTO, TechNova",
                 quote:
-                  "DevPulse revolutionized how we manage projects across our engineering teams. The AI-powered insights have helped us identify bottlenecks before they become problems.",
+                  "Pulse revolutionized how we manage projects across our engineering teams. The AI-powered insights have helped us identify bottlenecks before they become problems.",
               },
               {
                 name: "Mark Thompson",
                 role: "Project Director, GlobalBuild",
                 quote:
-                  "The strategic planning tools in DevPulse have allowed us to reduce project completion time by 30% while improving quality. It's become essential to our operations.",
+                  "The strategic planning tools in Pulse have allowed us to reduce project completion time by 30% while improving quality. It's become essential to our operations.",
               },
               {
                 name: "Elena Rodriguez",
                 role: "Founder, LaunchPad Startups",
                 quote:
-                  "As a startup accelerator, we recommend DevPulse to all our portfolio companies. Its idea generation features have sparked countless innovations.",
+                  "As a startup accelerator, we recommend Pulse to all our portfolio companies. Its idea generation features have sparked countless innovations.",
               },
             ].map(({ name, role, quote }) => (
               <Card
@@ -483,7 +483,7 @@ export default function ProjectAppLanding() {
             Ready to Transform Your Project Management?
           </h2>
           <p className="mb-8 mx-auto max-w-2xl text-indigo-100">
-            Join thousands of leading organizations that use DevPulse to
+            Join thousands of leading organizations that use Pulse to
             analyze, plan, and innovate. Try it free for 14 days.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

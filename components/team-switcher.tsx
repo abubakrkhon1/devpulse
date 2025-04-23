@@ -24,7 +24,7 @@ export function Logo() {
             <Layers className="size-4" />
           </div>
           <div className="grid flex-1 text-left text-md leading-tight">
-            <span className="truncate font-semibold">DevPulse</span>
+            <span className="truncate font-semibold">Pulse</span>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>

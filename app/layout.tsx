@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DevPulse",
-  description: "DevPulse - create your projects with us.",
+  title: "Pulse",
+  description: "Pulse - create your projects with us.",
 };
 
 export default function RootLayout({
