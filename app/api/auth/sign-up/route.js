@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import clientPromise from "@/lib/mongo.ts";
 
 export async function POST(req) {
-  const { email, password } = await req.json();
+  const { name, email, password } = await req.json();
   try {
     const client = await clientPromise;
     const db = client.db("devpulse");
@@ -20,7 +20,12 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db
       .collection("users")
-      .insertOne({ email, password: hashedPassword, createdAt: new Date() });
+      .insertOne({
+        name,
+        email,
+        password: hashedPassword,
+        createdAt: new Date(),
+      });
 
     return NextResponse.json({
       message: "User sucessfully created!",

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const signUpFormSchema = z
   .object({
+    name: z.string().min(1, "Name cannot be empty"),
     email: z
       .string()
       .min(1, "Email is required")
@@ -15,11 +16,9 @@ export const signUpFormSchema = z
   });
 
 export const loginFormSchema = z.object({
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-  });
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});

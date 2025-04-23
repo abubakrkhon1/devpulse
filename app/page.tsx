@@ -1,5 +1,8 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,16 +23,18 @@ import {
   ArrowRight,
   ChevronRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProjectAppLanding() {
   const router = useRouter();
+  const { user, loading, error } = useUser();
+  console.log(user, loading, error);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Navbar */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-around px-4 md:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
             <Layers className="h-6 w-6 text-indigo-500" />
             <span className="font-bold text-xl">DevPulse</span>
@@ -45,21 +50,32 @@ export default function ProjectAppLanding() {
               </a>
             ))}
           </nav>
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => router.push("/login")}
-              variant="ghost"
-              className="hidden md:flex"
-            >
-              Log in
-            </Button>
-            <Button
-              onClick={() => router.push("/signup")}
-              className="bg-indigo-600 hover:bg-indigo-700 dark:text-white"
-            >
-              Start Free Trial
-            </Button>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Avatar className="cursor-pointer hover:scale-105 transition">
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>P</AvatarFallback>
+              </Avatar>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => router.push("/login")}
+                  variant="ghost"
+                  className="hidden md:flex"
+                >
+                  Log in
+                </Button>
+                <Button
+                  onClick={() => router.push("/signup")}
+                  className="bg-indigo-600 hover:bg-indigo-700 dark:text-white"
+                >
+                  Start Free Trial
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
@@ -80,6 +96,7 @@ export default function ProjectAppLanding() {
           <Button
             size="lg"
             className="bg-indigo-600 hover:bg-indigo-700 px-8 dark:text-white"
+            onClick={() => router.push("/dashboard")}
           >
             Request Demo
             <ArrowRight className="ml-2 h-4 w-4" />
