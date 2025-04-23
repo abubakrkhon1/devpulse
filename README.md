@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+PULSE
+
+## Overview
+
+Pulse is a modern enterprise-grade developer platform designed to streamline project management, code quality monitoring, and team collaboration. Built with Next.js and leveraging a sophisticated OKLCH color system, Pulse offers an intuitive and accessible interface for development teams of all sizes.
+
+## Features
+
+- **Real-time Analytics**: Monitor project health, code quality metrics, and team productivity at a glance
+- **Unified Dashboard**: All your development metrics in one place with customizable views
+- **Team Collaboration**: Built-in tools for code review, task management, and team communication
+- **Theme Support**: Sophisticated light and dark mode with carefully crafted color palettes for reduced eye strain
+- **Responsive Design**: Fully functional across desktop, tablet, and mobile devices
+- **Enterprise Security**: Role-based access control and data encryption
+
+## Technology Stack
+
+- **Frontend**: Next.js, React, TypeScript
+- **Styling**: Tailwind CSS with custom OKLCH color system
+- **Authentication**: Custom JWT implementation with cookie-based sessions
+- **Data Visualization**: Custom chart components optimized for developer metrics
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18.0 or later
+- npm or yarn
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-organization/pulse.git
+
+# Navigate to the project directory
+cd pulse
+
+# Install dependencies
+npm install
+# or
+yarn install
+
+# Set up environment variables
+cp .env.example .env.local
+```
+
+### Development
+
+```bash
+# Run the development server
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Build the application
+npm run build
+# or
+yarn build
 
-## Learn More
+# Start the production server
+npm start
+# or
+yarn start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Pulse can be configured through environment variables. See `.env.example` for available options.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentation
 
-## Deploy on Vercel
+For complete documentation, visit [docs.pulse-dev.com](https://docs.pulse-dev.com).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+Pulse is available under the MIT License. See [LICENSE](LICENSE) for more information.
+
+## Support
+
+For support, please open an issue on GitHub or contact support@pulse-dev.com.
+
+---
+
+© 2025 Pulse. All rights reserved.
