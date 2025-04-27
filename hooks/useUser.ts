@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
-interface AppUser {
-  name: string;
-  email: string;
-  avatar?: string;
-}
+import { User } from "@/types/User";
 
 export function useUser(): {
-  user: AppUser | null;
+  user: User | null;
   loading: boolean;
   error: string | null;
 } {

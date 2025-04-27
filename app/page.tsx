@@ -24,6 +24,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 export default function ProjectAppLanding() {
   const router = useRouter();
@@ -73,13 +74,13 @@ export default function ProjectAppLanding() {
                 <Button
                   onClick={() => router.push("/login")}
                   variant="ghost"
-                  className="hidden md:flex"
+                  className="hidden md:flex cursor-pointer"
                 >
                   Log in
                 </Button>
                 <Button
                   onClick={() => router.push("/sign-up")}
-                  className="bg-indigo-600 hover:bg-indigo-700 dark:text-white"
+                  className="bg-indigo-600 hover:bg-indigo-700 dark:text-white cursor-pointer"
                 >
                   Start Free Trial
                 </Button>
@@ -105,7 +106,7 @@ export default function ProjectAppLanding() {
         <div className="mb-10 flex gap-4 flex-col sm:flex-row">
           <Button
             size="lg"
-            className="bg-indigo-600 hover:bg-indigo-700 px-8 dark:text-white"
+            className="bg-indigo-600 hover:bg-indigo-700 px-8 dark:text-white cursor-pointer"
             onClick={heroBtnClick}
           >
             {user ? "Dashboard" : "Request Demo"}
@@ -114,16 +115,18 @@ export default function ProjectAppLanding() {
           <Button
             size="lg"
             variant="outline"
-            className="hover:bg-indigo-50 dark:hover:bg-indigo-950"
+            className="hover:bg-indigo-50 dark:hover:bg-indigo-950 cursor-pointer"
           >
             View Documentation
           </Button>
         </div>
-        <div className="w-full h-[400px] overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
-          <img
-            src="hero.png"
-            alt=" Dashboard"
-            className="w-full h-full"
+        <div className="relative w-full h-[400px] overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
+          <Image
+            src="/hero.png"
+            alt="Dashboard"
+            fill
+            className="object-cover"
+            priority
           />
         </div>
       </section>
@@ -421,8 +424,8 @@ export default function ProjectAppLanding() {
               Trusted by Industry Leaders
             </h2>
             <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
-              See how Pulse has transformed project management for teams
-              across various industries.
+              See how Pulse has transformed project management for teams across
+              various industries.
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -483,8 +486,8 @@ export default function ProjectAppLanding() {
             Ready to Transform Your Project Management?
           </h2>
           <p className="mb-8 mx-auto max-w-2xl text-indigo-100">
-            Join thousands of leading organizations that use Pulse to
-            analyze, plan, and innovate. Try it free for 14 days.
+            Join thousands of leading organizations that use Pulse to analyze,
+            plan, and innovate. Try it free for 14 days.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button

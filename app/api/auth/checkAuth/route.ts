@@ -45,8 +45,16 @@ export async function GET() {
       _id: user._id.toString(),
       name: user.name!,
       email: user.email!,
+      jobTitle: user.jobTitle,
+      department: user.department,
+      role: user.role,
+      bio: user.bio,
+      verified: user.verified,
+      joinedAt: user.joinedAt,
+      lastActive: user.lastActive,
+      twoFactorEnabled: user.twoFactorEnabled,
+      avatar: user.avatar,
       createdAt: user.createdAt.toISOString(),
-      avatar: user.avatar
     };
 
     return NextResponse.json({ user: userWithoutPassword });

@@ -38,15 +38,10 @@ import { useUser } from "@/hooks/useUser";
 const data = {
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-    { title: "Lifecycle", url: "/lifecycle", icon: IconListDetails },
-    { title: "Analytics", url: "/analytics", icon: IconChartBar },
     { title: "Projects", url: "/projects", icon: IconFolder },
     { title: "Teams", url: "/teams", icon: IconUsers },
-  ],
-  documents: [
-    { name: "Data Library", url: "/library", icon: IconDatabase },
-    { name: "Reports", url: "/reports", icon: IconReport },
-    { name: "Word AI", url: "/word-ai", icon: IconFileWord },
+    { title: "Analytics", url: "/analytics", icon: IconChartBar },
+    { title: "Lifecycle", url: "/lifecycle", icon: IconListDetails },
   ],
   navSecondary: [
     { title: "Settings", url: "/settings", icon: IconSettings },
@@ -64,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           email: user.email,
           avatar: user.avatar ?? "https://github.com/shadcn.png",
         }
-      : { name: "Guest", email: "", avatar: "https://…" };
+      : { name: "Guest", email: "", avatar: "https://..." };
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

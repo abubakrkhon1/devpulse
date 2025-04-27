@@ -27,6 +27,7 @@ import {
   Share2,
   AlertTriangle,
 } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 // Missing SelectComponent
 const Select = ({ children, defaultValue, ...props }: any) => (
@@ -42,42 +43,12 @@ const Select = ({ children, defaultValue, ...props }: any) => (
 export default function AccountPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<string>("profile");
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch user data
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Simulated API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setUser({
-          id: "usr_12345",
-          name: "Alexander Mitchell",
-          email: "alex.mitchell@pulse-enterprise.com",
-          avatar: "/api/placeholder/300/300",
-          jobTitle: "Lead Developer",
-          department: "Engineering",
-          role: "Admin",
-          verified: true,
-          bio: "Full-stack developer with 10+ years of experience in enterprise applications. Focused on scalable architecture and developer experience.",
-          joinedAt: "2023-04-15T10:30:00Z",
-          lastActive: "2025-04-22T08:45:32Z",
-          twoFactorEnabled: true,
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
+  const {user, loading, error} = useUser();
+  
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -163,7 +134,7 @@ export default function AccountPage() {
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Calendar size={14} /> Joined{" "}
-                  {formatDate(user?.joinedAt || "")}
+                  {formatDate(user?.createdAt || "")}
                 </span>
               </div>
             </div>
