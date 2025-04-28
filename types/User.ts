@@ -12,10 +12,10 @@ export interface User {
   verified: boolean;
   bio: string;
   joinedAt: string;
+  isOnline: boolean;
   lastActive: string;
   twoFactorEnabled: boolean;
   createdAt: string;
 }
-
 
 export type UserWithoutPassword = Omit<User, "password">;

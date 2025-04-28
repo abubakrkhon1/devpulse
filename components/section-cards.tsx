@@ -1,4 +1,3 @@
-// components/ProjectSnapshotCards.tsx
 "use client";
 
 import {
@@ -18,6 +17,7 @@ import {
   CardFooter,
   CardAction,
 } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 interface ActiveProject {
   name: string;
@@ -74,6 +74,7 @@ export function SectionCards() {
       ] as AtRisk[],
     },
   ];
+  const router = useRouter();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
@@ -90,10 +91,14 @@ export function SectionCards() {
                 <Button
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2"
+                  onClick={() => router.push("/projects/new-project")}
                 >
                   <IconPlus className="h-4 w-4" /> New Project
                 </Button>
-                <Button className="w-full flex items-center justify-center gap-2">
+                <Button
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => router.push("/projects/brainstorm-idea")}
+                >
                   <IconBulb className="h-4 w-4" /> Brainstorm Idea
                 </Button>
               </div>
@@ -158,9 +163,7 @@ export function SectionCards() {
                 <span className="relative z-10">View all</span>
 
                 {/* the animated underline */}
-                <span
-                  className="absolute left-0 bottom-0 h-[2px] w-full bg-current transform scale-x-0 origin-left transition-transform duration-300 ease-out group-hover:scale-x-100"
-                />
+                <span className="absolute left-0 bottom-0 h-[2px] w-full bg-current transform scale-x-0 origin-left transition-transform duration-300 ease-out group-hover:scale-x-100" />
               </CardAction>
             </CardFooter>
           )}

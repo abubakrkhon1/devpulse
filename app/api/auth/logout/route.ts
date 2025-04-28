@@ -10,6 +10,5 @@ export async function GET(req: NextRequest) {
       { status: 404 }
     );
   cookie.delete("token");
-  console.log(token);
   return NextResponse.json("Removed token!");
 }

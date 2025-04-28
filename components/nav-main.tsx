@@ -32,6 +32,7 @@ export function NavMain({
             <SidebarMenuButton
               tooltip="New Project"
               className="cursor-pointer mb-2 bg-primary text-secondary dark:text-white hover:bg-primary/70 hover:text-secondary w-fit transition ease-linear"
+              onClick={()=>router.push("/projects/new-project")}
             >
               <IconCirclePlusFilled />
               <span>New Project</span>

@@ -46,14 +46,15 @@ export function LoginForm({
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
     setLoading(true);
-
+  
     const res = await fetch("/api/auth/sign-in", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
     });
     const data = await res.json();
-
+    console.log(data)
+  
     if (!res.ok) {
       if (res.status === 401 && data.message === "Passwords do not match!") {
         form.setError("password", {
@@ -67,11 +68,23 @@ export function LoginForm({
         });
       }
     } else {
+      // ✅ If login success → Update user to Online
+      try {
+        await fetch("/api/profile/online", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: data.userId }), // assuming server returns userId
+        });
+      } catch (error) {
+        console.error("Failed to set user online", error);
+      }
+  
       router.push("/dashboard");
     }
-
+  
     setLoading(false);
   }
+  
 
   return (
     <div className={cn("flex flex-col gap-6 ", className)} {...props}>

@@ -78,7 +78,7 @@ export async function signIn(data: User) {
       path: "/",
     });
 
-    return { message: "Login successful", status: 200 };
+    return { message: "Login successful", userId: user._id, status: 200 };
   } catch (error) {
     return { message: "Internal Server Error", status: 500 };
   }
@@ -130,6 +130,7 @@ export async function checkAuth() {
       lastActive: user.lastActive,
       twoFactorEnabled: user.twoFactorEnabled,
       avatar: user.avatar,
+      isOnline: user.isOnline,
       createdAt: user.createdAt.toISOString(),
     };
 
@@ -174,5 +175,85 @@ export async function updateBio(data: any) {
     }
   } catch (error) {
     return { message: "Internal Server Error", status: 500 };
+  }
+}
+
+export async function goOnline(id: string) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+    const res = await db
+      .collection("users")
+      .updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isOnline: true, lastActive: new Date() } }
+      );
+  } catch (error) {
+    return { message: "Internal server error", status: 500 };
+  }
+
+  return { message: "User set to online", status: 200 };
+}
+
+export async function goOffline(id: string) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+    const res = await db
+      .collection("users")
+      .updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isOnline: false, lastActive: new Date() } }
+      );
+  } catch (error) {
+    return { message: "Internal server error", status: 500 };
+  }
+
+  return { message: "User set to offline", status: 200 };
+}
+
+export async function getStatus(userId: string) {
+  const ONLINE_THRESHOLD_MINUTES = 5;
+
+  try {
+    // Validate userId
+    if (!userId || !ObjectId.isValid(userId)) {
+      return { message: "Invalid user ID", status: 400 };
+    }
+
+    // Connect to the database
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    // Find the user by ID
+    const user = await db.collection("users").findOne({
+      _id: new ObjectId(userId),
+    });
+
+    if (!user) {
+      return { message: "User not found", status: 404 };
+    }
+
+    // Calculate if the user is online based on their lastActive timestamp
+    // A user is considered online if they've been active within the threshold period
+    const lastActive = user.lastActive ? new Date(user.lastActive) : null;
+    const thresholdTime = new Date();
+    thresholdTime.setMinutes(
+      thresholdTime.getMinutes() - ONLINE_THRESHOLD_MINUTES
+    );
+
+    const isOnline = lastActive && lastActive > thresholdTime;
+
+    // Return the online status
+    return {
+      userId: user._id,
+      isOnline: isOnline,
+      lastActive: user.lastActive,
+      message: "Success",
+      status: 200,
+    };
+  } catch (error) {
+    console.error("Error checking user status:", error);
+    return { message: "Error checking user status", status: 500 };
   }
 }

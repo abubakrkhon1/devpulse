@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,10 @@ import {
   Icon,
   CircleX,
   LucideIcon,
+  Dot,
 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { UserOnlineContext } from "../layout";
 
 // Missing SelectComponent
 const Select = ({ children, defaultValue, ...props }: any) => (
@@ -75,6 +77,9 @@ export default function AccountPage() {
     }
   }, [user]);
 
+  // Inside your AccountPage component
+  const onlineStatus = useContext(UserOnlineContext);
+
   // Fetch user data
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +99,8 @@ export default function AccountPage() {
           status: true,
         });
         setTimeout(
-          () => setShowMessage({ message: "", icon: CheckCircle, status: false }),
+          () =>
+            setShowMessage({ message: "", icon: CheckCircle, status: false }),
           3000
         );
       } else {
@@ -104,7 +110,8 @@ export default function AccountPage() {
           status: true,
         });
         setTimeout(
-          () => setShowMessage({ message: "", icon: CheckCircle, status: false }),
+          () =>
+            setShowMessage({ message: "", icon: CheckCircle, status: false }),
           3000
         );
       }
@@ -129,11 +136,36 @@ export default function AccountPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
+    const now = new Date();
+
+    // Format just the time portion
+    const timeFormat = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const timeString = timeFormat.format(date);
+
+    // Check if it's today
+    if (date.toDateString() === now.toDateString()) {
+      return `Today at ${timeString}`;
+    }
+
+    // Check if it's yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${timeString}`;
+    }
+
+    // If it's not today or yesterday, show the date
+    const dateFormat = new Intl.DateTimeFormat("en-US", {
+      month: "short",
       day: "numeric",
-    }).format(date);
+    });
+    const dateStringed = dateFormat.format(date);
+
+    return `${dateStringed} at ${timeString}`;
   };
 
   return (
@@ -173,6 +205,18 @@ export default function AccountPage() {
                     </Badge>
                   )}
                 </div>
+              </div>
+
+              <div className="my-1 text-muted-foreground">
+                {onlineStatus ? (
+                  <h4 className="text-green-500 flex">
+                    <Dot /> {"Online"}
+                  </h4>
+                ) : (
+                  <h4 className="text-neutral-500">
+                    {"Last online: " + formatDate(user?.lastActive || "")}
+                  </h4>
+                )}
               </div>
 
               <div className="mt-1 text-muted-foreground">
@@ -228,7 +272,11 @@ export default function AccountPage() {
       <div className="container max-w-6xl mx-auto py-8 px-4">
         {/* Success notification */}
         {showMessage.status && (
-          <div className={`${showMessage.icon == CircleX && "bg-red-300"} mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3`}>
+          <div
+            className={`${
+              showMessage.icon == CircleX && "bg-red-300"
+            } mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3`}
+          >
             <showMessage.icon size={20} className="text-primary" />
             <p>{showMessage.message}</p>
           </div>
@@ -428,13 +476,19 @@ export default function AccountPage() {
                     Activity
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent>
                   <div className="space-y-6">
                     <div className="flex flex-col gap-1">
                       <span className="text-sm font-medium">Last Active</span>
                       <span className="text-muted-foreground flex items-center gap-1">
                         <div className="h-2 w-2 rounded-full bg-primary"></div>
-                        Yesterday at 8:45 AM
+                        {user?.isOnline ? (
+                          <span className="text-green-500 pl-1">
+                            Active now
+                          </span>
+                        ) : (
+                          formatDate(user?.lastActive || "Error formatting")
+                        )}
                       </span>
                     </div>
 
