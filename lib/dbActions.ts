@@ -1,4 +1,4 @@
-import { User, UserWithoutPassword } from "@/types/User";
+import { LoginDevice, User, UserWithoutPassword } from "@/types/types";
 import clientPromise from "./mongo";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -51,7 +51,7 @@ export async function signUp(data: User) {
   }
 }
 
-export async function signIn(data: User) {
+export async function signIn(data: User, deviceData: LoginDevice) {
   const { email, password } = data;
   try {
     const client = await clientPromise;
@@ -69,6 +69,48 @@ export async function signIn(data: User) {
     const token = jwt.sign(userFixed, process.env.JWT_SECRET!, {
       expiresIn: "1d",
     });
+
+    const existingDevice = await db.collection("users").findOne({
+      email,
+      loginDevices: {
+        $elemMatch: {
+          browser: deviceData.browser,
+          os: deviceData.os,
+          deviceType: deviceData.deviceType,
+        },
+      },
+    });
+
+    if (existingDevice) {
+      await db.collection("users").updateOne(
+        {
+          email,
+          "loginDevices.browser": deviceData.browser,
+          "loginDevices.os": deviceData.os,
+          "loginDevices.deviceType": deviceData.deviceType,
+        },
+        {
+          $set: {
+            "loginDevices.$.loggedInAt": new Date(),
+            lastActive: new Date(),
+            isOnline: true,
+          },
+        }
+      );
+    } else {
+      await db.collection<User>("users").updateOne(
+        { email },
+        {
+          $push: {
+            loginDevices: { $each: [deviceData] }, // <-- Fixed here
+          },
+          $set: {
+            lastActive: new Date(),
+            isOnline: true,
+          },
+        }
+      );
+    }
 
     const cookiesSet = await cookies();
     cookiesSet.set("token", token, {
@@ -131,6 +173,7 @@ export async function checkAuth() {
       twoFactorEnabled: user.twoFactorEnabled,
       avatar: user.avatar,
       isOnline: user.isOnline,
+      loginDevices: user.loginDevices,
       createdAt: user.createdAt.toISOString(),
     };
 
@@ -255,5 +298,98 @@ export async function getStatus(userId: string) {
   } catch (error) {
     console.error("Error checking user status:", error);
     return { message: "Error checking user status", status: 500 };
+  }
+}
+
+export async function updatePassword(data: any) {
+  if (!data || Object.keys(data).length === 0) {
+    return { message: "Values should not be empty", status: 400 };
+  }
+  const { userId, password, newPassword } = await data;
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    const existingUser = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
+
+    console.log(existingUser);
+
+    if (existingUser) {
+      const isMatch = await bcrypt.compare(password, existingUser.password);
+
+      if (!isMatch)
+        return { message: "Current password is incorrect!", status: 401 };
+
+      const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+      const result = await db.collection("users").updateOne(
+        { _id: new ObjectId(userId) },
+        {
+          $set: { password: newHashedPassword },
+        }
+      );
+
+      return {
+        message: "User sucessfully updated!",
+        result,
+        status: 200,
+      };
+    } else {
+      return { message: "Internal Server Error", status: 500 };
+    }
+  } catch (error) {
+    return { message: "Internal Server Error", status: 500 };
+  }
+}
+
+export async function newIdea(data: any) {
+  const { projectName, problem, audience, features, notes } = data;
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    const existingUser = await db.collection("ideas").findOne({ projectName });
+
+    if (existingUser) return { message: "User already exists", status: 400 };
+
+    const result = await db.collection("ideas").insertOne({
+      projectName,
+      problem,
+      audience,
+      features,
+      notes,
+      createdAt: new Date(),
+    });
+
+    return {
+      message: "Idea sucessfully created!",
+      result,
+      status: 200,
+    };
+  } catch (error) {
+    return { message: "Internal Server Error", status: 500 };
+  }
+}
+
+export async function fetchIdeas() {
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    const ideas = await db.collection("ideas").find({}).toArray();
+
+    if (!ideas) return { message: "No ideas", status: 404 };
+
+    return {
+      message: "Ideas sucessfully fetched!",
+      ideas,
+      status: 200,
+    };
+  } catch (error) {
+    return { message: "Internal Server Error", status: 500 };
   }
 }

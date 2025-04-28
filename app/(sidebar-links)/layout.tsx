@@ -3,7 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/useUser";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 
 export const UserOnlineContext = createContext(false);
 
@@ -14,11 +14,11 @@ export default function Layout({
 }>) {
   const { user } = useUser();
   const [onlineStatus, setOnlineStatus] = useState(false);
+  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!user?._id) return;
 
-    // Update user as active
     const updateUserActive = async () => {
       try {
         await fetch(`/api/profile/updateStatus`, {
@@ -31,21 +31,19 @@ export default function Layout({
       }
     };
 
-    // Update user as offline
     const setUserOffline = async () => {
       try {
         await fetch(`/api/profile/offline`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user._id }),
-          keepalive: true, // ✅ Important so request doesn't cancel when tab closes
+          keepalive: true,
         });
       } catch (error) {
         console.error("Error setting user offline:", error);
       }
     };
 
-    // Check user's current status (optional)
     const checkUserStatus = async () => {
       try {
         const response = await fetch(`/api/profile/status`, {
@@ -62,39 +60,40 @@ export default function Layout({
       }
     };
 
-    // Initial actions
+    // Activity handler (debounced)
+    const handleUserActivity = () => {
+      if (activityTimeoutRef.current) {
+        clearTimeout(activityTimeoutRef.current);
+      }
+      activityTimeoutRef.current = setTimeout(() => {
+        updateUserActive();
+      }, 30000); // wait 30 seconds after last activity
+    };
+
     updateUserActive();
     checkUserStatus();
 
-    // Regular intervals
-    const activeInterval = setInterval(updateUserActive, 60000); // update lastActive every 1 min
-    const statusInterval = setInterval(checkUserStatus, 30000); // check status every 30s
+    const activeInterval = setInterval(updateUserActive, 60000); // update every 1 minute
+    const statusInterval = setInterval(checkUserStatus, 30000); // check every 30s
 
-    // Update active on activity
     const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
-    const handleUserActivity = updateUserActive;
     activityEvents.forEach((event) => {
       window.addEventListener(event, handleUserActivity);
     });
 
-    // Set offline when tab closes
-    const handleBeforeUnload = () => {
-      setUserOffline();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", setUserOffline);
 
-    // Clean up
     return () => {
       clearInterval(activeInterval);
       clearInterval(statusInterval);
+      if (activityTimeoutRef.current) clearTimeout(activityTimeoutRef.current);
 
       activityEvents.forEach((event) => {
         window.removeEventListener(event, handleUserActivity);
       });
 
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("beforeunload", setUserOffline);
 
-      // Also set offline immediately when component unmounts
       setUserOffline();
     };
   }, [user?._id]);

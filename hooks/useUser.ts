@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User } from "@/types/User";
+import { User } from "@/types/types";
 
 export function useUser(): {
   user: User | null;
