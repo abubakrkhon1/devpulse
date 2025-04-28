@@ -59,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           email: user.email,
           avatar: user.avatar ?? "https://github.com/shadcn.png",
         }
-      : { name: "Guest", email: "", avatar: "https://..." };
+      : { name: "Guest", email: "", avatar: "" };
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

@@ -189,7 +189,7 @@ export function SignUpForm({
                         {...field}
                         className="h-9 w-full rounded-md border px-3 text-sm shadow-sm focus:ring-1"
                       >
-                        {["User", "Admin", "Manager"].map((r) => (
+                        {["User", "Manager"].map((r) => (
                           <option key={r} value={r}>
                             {r}
                           </option>

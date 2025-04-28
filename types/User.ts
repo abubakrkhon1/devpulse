@@ -16,3 +16,6 @@ export interface User {
   twoFactorEnabled: boolean;
   createdAt: string;
 }
+
+
+export type UserWithoutPassword = Omit<User, "password">;

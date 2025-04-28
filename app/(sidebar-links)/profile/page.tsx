@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { User } from "@/types/User";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +24,9 @@ import {
   Globe,
   Share2,
   AlertTriangle,
+  Icon,
+  CircleX,
+  LucideIcon,
 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 
@@ -41,23 +42,72 @@ const Select = ({ children, defaultValue, ...props }: any) => (
 );
 
 export default function AccountPage() {
-  const router = useRouter();
   const [activeSection, setActiveSection] = useState<string>("profile");
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showMessage, setShowMessage] = useState<{
+    message: string;
+    status: boolean;
+    icon: LucideIcon; // <-- type properly
+  }>({
+    message: "",
+    status: false,
+    icon: CheckCircle,
+  });
+  const { user, loading, error } = useUser();
+
+  const [form, setForm] = useState({
+    userId: "",
+    name: "",
+    jobTitle: "",
+    department: "",
+    bio: "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setForm({
+        userId: user._id || "",
+        name: user.name || "",
+        jobTitle: user.jobTitle || "",
+        department: user.department || "",
+        bio: user.bio || "",
+      });
+    }
+  }, [user]);
 
   // Fetch user data
-  const {user, loading, error} = useUser();
-  
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      // API call
+      const res = await fetch("/api/profile/updateBio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setShowMessage({
+          message: "Your profile has been updated successfully.",
+          icon: CheckCircle,
+          status: true,
+        });
+        setTimeout(
+          () => setShowMessage({ message: "", icon: CheckCircle, status: false }),
+          3000
+        );
+      } else {
+        setShowMessage({
+          message: "Error updating user!",
+          icon: CircleX,
+          status: true,
+        });
+        setTimeout(
+          () => setShowMessage({ message: "", icon: CheckCircle, status: false }),
+          3000
+        );
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
     } finally {
@@ -177,10 +227,10 @@ export default function AccountPage() {
       {/* Main content area */}
       <div className="container max-w-6xl mx-auto py-8 px-4">
         {/* Success notification */}
-        {showSuccess && (
-          <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3">
-            <CheckCircle size={20} className="text-primary" />
-            <p>Your profile has been updated successfully.</p>
+        {showMessage.status && (
+          <div className={`${showMessage.icon == CircleX && "bg-red-300"} mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-3`}>
+            <showMessage.icon size={20} className="text-primary" />
+            <p>{showMessage.message}</p>
           </div>
         )}
 
@@ -204,8 +254,11 @@ export default function AccountPage() {
                         </Label>
                         <Input
                           id="name"
-                          defaultValue={user?.name || ""}
                           className="border-border/50 focus-visible:ring-primary/30"
+                          onChange={(e) =>
+                            setForm({ ...form, name: e.target.value })
+                          }
+                          value={form.name}
                         />
                       </div>
                       <div className="space-y-2">
@@ -215,7 +268,7 @@ export default function AccountPage() {
                         <Input
                           id="email"
                           type="email"
-                          defaultValue={user?.email || ""}
+                          value={user?.email || ""}
                           disabled
                           className="border-border/50 bg-secondary/5"
                         />
@@ -226,8 +279,11 @@ export default function AccountPage() {
                         </Label>
                         <Input
                           id="title"
-                          defaultValue={user?.jobTitle || ""}
                           className="border-border/50 focus-visible:ring-primary/30"
+                          onChange={(e) =>
+                            setForm({ ...form, jobTitle: e.target.value })
+                          }
+                          value={form.jobTitle}
                         />
                       </div>
                       <div className="space-y-2">
@@ -239,8 +295,11 @@ export default function AccountPage() {
                         </Label>
                         <Input
                           id="department"
-                          defaultValue={user?.department || ""}
                           className="border-border/50 focus-visible:ring-primary/30"
+                          onChange={(e) =>
+                            setForm({ ...form, department: e.target.value })
+                          }
+                          value={form.department}
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
@@ -250,7 +309,10 @@ export default function AccountPage() {
                         <textarea
                           id="bio"
                           className="min-h-32 w-full rounded-md border border-border/50 bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30"
-                          defaultValue={user?.bio || ""}
+                          onChange={(e) =>
+                            setForm({ ...form, bio: e.target.value })
+                          }
+                          value={form.bio}
                         />
                       </div>
                     </div>
