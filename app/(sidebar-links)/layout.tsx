@@ -1,102 +1,78 @@
 "use client";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/useUser";
-import { createContext, useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { UserOnlineContext } from "@/hooks/useUserOnlineContext";
 
-export const UserOnlineContext = createContext(false);
+// Create the query client (lazy-initialize to avoid SSR issues)
+function getQueryClient() {
+  // Use module-level variable so it's only created once in browser
+  if (typeof window === "undefined") {
+    // Return dummy during SSR
+    return new QueryClient({
+      defaultOptions: {
+        queries: { enabled: false },
+      },
+    });
+  }
+
+  // Lazy initialize the client
+  if (!(getQueryClient as any).client) {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 60000, // 1 minute
+          retry: 3,
+        },
+      },
+    });
+    (getQueryClient as any).client = client;
+  }
+
+  return (getQueryClient as any).client;
+}
 
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Create query client state for client-side hydration
+  const [queryClient] = useState(getQueryClient);
   const { user } = useUser();
-  const [onlineStatus, setOnlineStatus] = useState(false);
-  const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (!user?._id) return;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppLayout user={user}>{children}</AppLayout>
+    </QueryClientProvider>
+  );
+}
 
-    const updateUserActive = async () => {
-      try {
-        await fetch(`/api/profile/updateStatus`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(user._id),
-        });
-      } catch (error) {
-        console.error("Error updating active status:", error);
-      }
-    };
+// Define interface for user type
+interface User {
+  _id?: string;
+  [key: string]: any; // For any other properties
+}
 
-    const setUserOffline = async () => {
-      try {
-        await fetch(`/api/profile/offline`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user._id }),
-          keepalive: true,
-        });
-      } catch (error) {
-        console.error("Error setting user offline:", error);
-      }
-    };
-
-    const checkUserStatus = async () => {
-      try {
-        const response = await fetch(`/api/profile/status`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user._id }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setOnlineStatus(data.isOnline);
-        }
-      } catch (error) {
-        console.error("Error checking user status:", error);
-      }
-    };
-
-    // Activity handler (debounced)
-    const handleUserActivity = () => {
-      if (activityTimeoutRef.current) {
-        clearTimeout(activityTimeoutRef.current);
-      }
-      activityTimeoutRef.current = setTimeout(() => {
-        updateUserActive();
-      }, 30000); // wait 30 seconds after last activity
-    };
-
-    updateUserActive();
-    checkUserStatus();
-
-    const activeInterval = setInterval(updateUserActive, 60000); // update every 1 minute
-    const statusInterval = setInterval(checkUserStatus, 30000); // check every 30s
-
-    const activityEvents = ["mousedown", "keydown", "touchstart", "scroll"];
-    activityEvents.forEach((event) => {
-      window.addEventListener(event, handleUserActivity);
-    });
-
-    window.addEventListener("beforeunload", setUserOffline);
-
-    return () => {
-      clearInterval(activeInterval);
-      clearInterval(statusInterval);
-      if (activityTimeoutRef.current) clearTimeout(activityTimeoutRef.current);
-
-      activityEvents.forEach((event) => {
-        window.removeEventListener(event, handleUserActivity);
-      });
-
-      window.removeEventListener("beforeunload", setUserOffline);
-
-      setUserOffline();
-    };
-  }, [user?._id]);
+// Separate the actual layout to make testing easier
+function AppLayout({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: User | null;
+}) {
+  // Use the custom hook to manage online status (it's now safe for SSR)
+  const onlineStatus = useOnlineStatus(user?._id, {
+    // Custom configuration if needed
+    activityDebounceTime: 30000,
+    heartbeatInterval: 60000,
+  });
 
   return (
     <UserOnlineContext.Provider value={onlineStatus}>

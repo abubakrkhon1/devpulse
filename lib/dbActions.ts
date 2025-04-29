@@ -221,17 +221,23 @@ export async function updateBio(data: any) {
   }
 }
 
-export async function goOnline(id: string) {
+export async function goOnline(userId: string) {
   try {
     const client = await clientPromise;
     const db = client.db("devpulse");
-    const res = await db
+
+    const result = await db
       .collection("users")
       .updateOne(
-        { _id: new ObjectId(id) },
+        { _id: new ObjectId(userId) },
         { $set: { isOnline: true, lastActive: new Date() } }
       );
+
+    if (result.matchedCount === 0) {
+      return { message: "No user found", status: 404 };
+    }
   } catch (error) {
+    console.error("goOnline error:", error);
     return { message: "Internal server error", status: 500 };
   }
 

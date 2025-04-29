@@ -40,7 +40,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useUser } from "@/hooks/useUser";
-import { UserOnlineContext } from "../layout";
+import { UserOnlineContext } from "@/hooks/useUserOnlineContext";
 import { useTheme } from "next-themes";
 import SecuritySection from "@/components/profile-ui/SecuritySection";
 import NotificationSection from "@/components/profile-ui/NotificationSection";

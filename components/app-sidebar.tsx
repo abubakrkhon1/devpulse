@@ -38,8 +38,20 @@ import { useUser } from "@/hooks/useUser";
 const data = {
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-    { title: "Projects", url: "/projects", icon: IconFolder },
-    { title: "Ideas", url: "/ideas", icon: IconChartBar },
+    {
+      title: "Projects",
+      url: "/projects",
+      icon: IconFolder,
+    },
+    {
+      title: "Ideas",
+      url: "/ideas",
+      icon: IconChartBar,
+      itemsSub: [
+        { title: "Brainstorm idea", url: "/projects/brainstorm-idea", icon: IconFolder },
+        { title: "See your ideas", url: "/ideas", icon: IconFolder },
+      ],
+    },
     { title: "Teams", url: "/teams", icon: IconUsers },
     { title: "Analytics", url: "/analytics", icon: IconChartBar },
   ],

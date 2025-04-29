@@ -4,20 +4,11 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-
-interface Idea {
-  _id: string;
-  projectName: string;
-  problem: string;
-  audience: string;
-  features: string[];
-  notes: string;
-  createdAt: string;
-}
+import { ProjectIdea } from "@/types/types";
 
 export default function IdeasPage() {
   const router = useRouter();
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [ideas, setIdeas] = useState<ProjectIdea[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,7 +42,20 @@ export default function IdeasPage() {
       </div>
 
       {loading ? (
-        <div className="text-center">Loading ideas...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+          {[...Array(6)].map((_, index) => (
+            <div
+              key={index}
+              className="animate-pulse flex flex-col space-y-4 rounded-md border p-6 shadow-sm bg-muted"
+            >
+              <div className="h-6 bg-gray-300 rounded w-3/4 mx-auto" />
+              <div className="h-4 bg-gray-300 rounded w-full" />
+              <div className="h-4 bg-gray-300 rounded w-5/6" />
+              <div className="h-4 bg-gray-300 rounded w-2/3" />
+              <div className="h-4 bg-gray-300 rounded w-1/2 ml-auto" />
+            </div>
+          ))}
+        </div>
       ) : ideas.length === 0 ? (
         <div className="text-center text-muted-foreground">No ideas found.</div>
       ) : (
