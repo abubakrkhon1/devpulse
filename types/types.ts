@@ -43,6 +43,8 @@ export interface Project {
   tasks: number;
   completedTasks: number;
   dueDate: string;
+  team: [];
+  teamColors: [];
   progress: number;
 }
 

@@ -161,10 +161,8 @@ export default function ProjectsDashboard() {
               </div>
               <Button
                 onClick={() => router.push("/projects/new-project")}
-                size="sm"
-                className="p-5 bg-primary text-white"
               >
-                <Plus className="w-4 h-4" /> New Project
+                New Project
               </Button>
             </div>
           </div>

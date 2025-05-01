@@ -428,6 +428,7 @@ export async function newProject(data: any) {
       priority,
       status,
       team,
+      teamColors: ["bg-blue-500", "bg-green-500", "bg-purple-500"],
       category,
       budget,
       progress: 0,

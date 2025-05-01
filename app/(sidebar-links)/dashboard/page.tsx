@@ -46,6 +46,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Project, ProjectIdea } from "@/types/types";
+import { formatDate } from "@/lib/utils";
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -56,6 +58,10 @@ export default function DashboardPage() {
     gamma: 0,
   });
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [ideas, setIdeas] = useState<ProjectIdea[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -64,6 +70,32 @@ export default function DashboardPage() {
       setProgressValues({ alpha: 75, beta: 45, gamma: 90 });
     }, 300);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+
+        const projects = await fetch("/api/projects/fetchProjects");
+        if (!projects.ok) throw new Error("Failed to load projects");
+
+        const ideas = await fetch("/api/ideas/fetchIdeas");
+        if (!ideas.ok) throw new Error("Failed to load ideas");
+
+        const projectsData = await projects.json();
+        const ideasData = await ideas.json();
+
+        setIdeas(ideasData.ideas);
+        setProjects(projectsData.projects);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, []);
 
   const fadeIn = mounted
@@ -97,7 +129,7 @@ export default function DashboardPage() {
         {[
           {
             title: "Total Projects",
-            value: "12",
+            value: projects.length,
             change: "+2 from last month",
             icon: <LineChart className="h-5 w-5 text-primary" />,
             bgColor:
@@ -106,7 +138,7 @@ export default function DashboardPage() {
           },
           {
             title: "Tasks Completed",
-            value: "5",
+            value: "#",
             change: "83% completion rate",
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
             bgColor:
@@ -115,7 +147,7 @@ export default function DashboardPage() {
           },
           {
             title: "Team Members",
-            value: "4",
+            value: "#",
             change: "2 active now",
             icon: <Users className="h-5 w-5 text-violet-500" />,
             bgColor:
@@ -124,7 +156,7 @@ export default function DashboardPage() {
           },
           {
             title: "Brainstormed Ideas",
-            value: "3",
+            value: ideas.length,
             change: "1 in review",
             icon: <Star className="h-5 w-5 text-amber-500" />,
             bgColor:
@@ -216,59 +248,18 @@ export default function DashboardPage() {
             <TabsTrigger value="archived">Archived</TabsTrigger>
           </TabsList>
           <TabsContent value="active" className="space-y-5 pt-5">
-            {[
-              {
-                id: 1,
-                title: "Project Alpha",
-                description: "UI/UX Design System",
-                status: "On Track",
-                statusVariant: "default",
-                progress: progressValues.alpha,
-                dueDate: "Apr 29",
-                team: ["A", "B"],
-                teamColors: ["bg-blue-500", "bg-green-500"],
-              },
-              {
-                id: 2,
-                title: "Project Beta",
-                description: "Database Migration",
-                status: "Behind",
-                statusVariant: "destructive",
-                progress: progressValues.beta,
-                dueDate: "May 2",
-                team: ["C", "D"],
-                teamColors: ["bg-purple-500", "bg-orange-500"],
-              },
-              {
-                id: 3,
-                title: "Project Gamma",
-                description: "Marketing Campaign",
-                status: "On Track",
-                statusVariant: "default",
-                progress: progressValues.gamma,
-                dueDate: "May 5",
-                team: ["A", "E"],
-                teamColors: ["bg-blue-500", "bg-red-500"],
-              },
-            ].map((project, index) => (
+            {projects.map((project, index) => (
               <Card
                 key={index}
                 className="overflow-hidden group hover:shadow-md transition-all duration-300"
-                onClick={() => router.push(`/projects/${project.id}`)}
+                onClick={() => router.push(`/projects/${project._id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle>{project.title}</CardTitle>
-                    <Badge
-                      variant={
-                        project.statusVariant as
-                          | "default"
-                          | "outline"
-                          | "destructive"
-                          | "secondary"
-                      }
-                    >
-                      {project.status}
+                    <Badge className="p-2">
+                      {project.status[0].toUpperCase() +
+                        project.status.slice(1)}
                     </Badge>
                   </div>
                   <CardDescription>{project.description}</CardDescription>
@@ -286,7 +277,8 @@ export default function DashboardPage() {
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">Due Date</span>
                       <span className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                        <Calendar className="h-3 w-3" /> {project.dueDate}
+                        <Calendar className="h-3 w-3" />{" "}
+                        {formatDate(new Date(project.dueDate))}
                       </span>
                     </div>
                     <div className="flex flex-col">
