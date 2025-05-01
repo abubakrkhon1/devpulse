@@ -34,4 +34,16 @@ export interface ProjectIdea {
   createdAt: Date;
 }
 
+export interface Project {
+  _id: string;
+  title: string;
+  description: string;
+  status: "completed" | "in-progress" | "planning" | "review";
+  priority: "urgent" | "high" | "medium" | "low";
+  tasks: number;
+  completedTasks: number;
+  dueDate: string;
+  progress: number;
+}
+
 export type UserWithoutPassword = Omit<User, "password">;

@@ -45,14 +45,17 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState("active");
   const [progressValues, setProgressValues] = useState({
     alpha: 0,
     beta: 0,
     gamma: 0,
   });
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -72,9 +75,7 @@ export default function DashboardPage() {
       {/* Dashboard Header with Greeting */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
         <div className={`transition-all duration-500 ease-in-out ${fadeIn}`}>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Dashboard
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground mt-1">
             Welcome back! Here's your project overview for April 28, 2025
           </p>
@@ -161,21 +162,25 @@ export default function DashboardPage() {
             label: "New Project",
             icon: <Plus className="mr-2 h-4 w-4" />,
             variant: "default",
+            url: "/projects/new-project",
           },
           {
             label: "View Tasks",
             icon: <Clock className="mr-2 h-4 w-4" />,
             variant: "outline",
+            url: "#",
           },
           {
             label: "Team",
             icon: <Users className="mr-2 h-4 w-4" />,
             variant: "outline",
+            url: "/teams",
           },
           {
             label: "Settings",
             icon: <Settings className="mr-2 h-4 w-4" />,
             variant: "outline",
+            url: "/settings",
           },
         ].map((action, index) => (
           <Button
@@ -188,7 +193,7 @@ export default function DashboardPage() {
                 | "secondary"
             }
             className={`w-full justify-start hover:shadow-md transition-all duration-300 ${fadeIn}`}
-            style={{ transitionDelay: `${(index + 4) * 100}ms` }}
+            onClick={() => router.push(action.url)}
           >
             {action.icon}
             {action.label}
@@ -200,7 +205,8 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-7">
         {/* Project Overview - Wider Column */}
         <Tabs
-          defaultValue="active"
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as any)}
           className={`md:col-span-4 transition-all duration-500 ease-in-out ${fadeIn}`}
           style={{ transitionDelay: "800ms" }}
         >
@@ -212,6 +218,7 @@ export default function DashboardPage() {
           <TabsContent value="active" className="space-y-5 pt-5">
             {[
               {
+                id: 1,
                 title: "Project Alpha",
                 description: "UI/UX Design System",
                 status: "On Track",
@@ -222,6 +229,7 @@ export default function DashboardPage() {
                 teamColors: ["bg-blue-500", "bg-green-500"],
               },
               {
+                id: 2,
                 title: "Project Beta",
                 description: "Database Migration",
                 status: "Behind",
@@ -232,6 +240,7 @@ export default function DashboardPage() {
                 teamColors: ["bg-purple-500", "bg-orange-500"],
               },
               {
+                id: 3,
                 title: "Project Gamma",
                 description: "Marketing Campaign",
                 status: "On Track",
@@ -245,6 +254,7 @@ export default function DashboardPage() {
               <Card
                 key={index}
                 className="overflow-hidden group hover:shadow-md transition-all duration-300"
+                onClick={() => router.push(`/projects/${project.id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -326,7 +336,11 @@ export default function DashboardPage() {
                   You've completed all your projects. Time to celebrate or start
                   something new!
                 </div>
-                <Button variant="outline" className="mt-2">
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => router.push("/projects/new-project")}
+                >
                   Create New Project
                 </Button>
               </div>
@@ -342,7 +356,11 @@ export default function DashboardPage() {
                 <div className="text-sm text-muted-foreground max-w-xs">
                   Projects you archive will appear here for future reference.
                 </div>
-                <Button variant="outline" className="mt-2">
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => setActiveTab("active")}
+                >
                   View Active Projects
                 </Button>
               </div>

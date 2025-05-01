@@ -1,21 +1,27 @@
 "use client";
+
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Calendar,
+  ChevronRight,
+  CirclePlus,
+  Users,
+  Calendar as CalendarIcon,
+  Briefcase,
+  Clock,
+  Flag,
   UserPlus,
   X,
-  Clock,
-  Users,
-  Briefcase,
-  ChevronRight,
-  Flag,
-  CirclePlus,
   FolderPlus,
 } from "lucide-react";
 import { format } from "date-fns";
 
-// Import shadcn/ui components
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { projectFormSchema } from "@/lib/formSchemas";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,9 +47,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -51,103 +63,51 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useRouter } from "next/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+// Infer form values from Zod schema
+type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export default function ProjectCreationPage() {
+  const router = useRouter();
   const [teamMember, setTeamMember] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const router = useRouter();
 
-  interface FormData {
-    title: string;
-    description: string;
-    dueDate: string;
-    priority: string;
-    status: string;
-    team: string[];
-    category: string;
-    budget: string;
-  }
-
-  const [formData, setFormData] = useState<FormData>({
-    title: "",
-    description: "",
-    dueDate: "",
-    priority: "",
-    status: "planning",
-    team: [],
-    category: "",
-    budget: "",
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      dueDate: new Date(),
+      category: "",
+      status: "planning",
+      priority: "",
+      team: [],
+      budget: 0,
+    },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const team = form.watch("team");
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleDateChange = (selectedDate?: Date) => {
-    setDate(selectedDate);
-    setFormData((prev) => ({
-      ...prev,
-      dueDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
-    }));
-  };
-
-  const handleAddTeamMember = () => {
-    if (
-      teamMember.trim() !== "" &&
-      !formData.team.includes(teamMember.trim())
-    ) {
-      setFormData((prev) => ({
-        ...prev,
-        team: [...prev.team, teamMember.trim()],
-      }));
-      setTeamMember("");
-    }
-  };
-
-  const handleRemoveTeamMember = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      team: prev.team.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSubmit = () => {
+  const onSubmit = async (values: ProjectFormValues) => {
     setIsSubmitting(true);
     setError("");
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-
-      // Show success message
-      setFormData({
-        title: "",
-        description: "",
-        dueDate: "",
-        priority: "",
-        status: "planning",
-        team: [],
-        category: "",
-        budget: "",
+    console.log("clicked");
+    try {
+      const res = await fetch("/api/projects/createProject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
       });
-      setDate(undefined);
-    }, 1500);
+      if (!res.ok) throw new Error("Failed to create project");
+      await res.json();
+      router.push("/projects");
+    } catch (err: any) {
+      setError(err.message || "Unknown error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -160,54 +120,20 @@ export default function ProjectCreationPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2"
                 onClick={() => router.push("/projects")}
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Projects
+                <ArrowLeft className="h-4 w-4 mr-1" /> Projects
               </Button>
               <ChevronRight className="h-4 w-4 text-slate-400" />
               <span className="text-slate-600 text-sm">New Project</span>
             </div>
-            <div className="flex items-center">
-              <FolderPlus className="text-primary mr-2"/>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Create Project
-              </h1>
-            </div>
           </div>
-
-          <div className="flex items-center space-x-2">
-            <Button size="sm" onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <span className="mr-2">Creating...</span>
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </>
-              ) : (
-                "Create Project"
-              )}
-            </Button>
-          </div>
+          <Button
+            onClick={() => form.handleSubmit(onSubmit)()}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Project"}
+          </Button>
         </div>
 
         {error && (
@@ -217,322 +143,369 @@ export default function ProjectCreationPage() {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl">Project Information</CardTitle>
-                <CardDescription>
-                  Enter the basic details about your new project.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="title">Project Name</Label>
-                  <Input
-                    id="title"
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit,(errors) => console.log("validation failed:", errors))}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+            {/* Main Form Fields */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Information</CardTitle>
+                  <CardDescription>
+                    Enter the basic details about your new project.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
                     name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Enter a descriptive name"
-                    className="w-full"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="title"
+                            placeholder="Enter a descriptive name"
+                            className="w-full"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
+                  <FormField
+                    control={form.control}
                     name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="What are the goals and scope of this project?"
-                    rows={4}
-                    className="resize-none"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            id="description"
+                            placeholder="What are the goals and scope of this project?"
+                            rows={4}
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="category">Category</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleSelectChange("category", value)
-                      }
-                      value={formData.category}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="development">Development</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="research">Research</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <FormControl>
+                            <Select {...field} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="development">
+                                  Development
+                                </SelectItem>
+                                <SelectItem value="design">Design</SelectItem>
+                                <SelectItem value="marketing">
+                                  Marketing
+                                </SelectItem>
+                                <SelectItem value="research">
+                                  Research
+                                </SelectItem>
+                                <SelectItem value="operations">
+                                  Operations
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <div className="space-y-1">
-                    <Label className="text-sm">Status</Label>
-                    <Select
-                      onValueChange={(value) =>
-                        handleSelectChange("status", value)
-                      }
-                      defaultValue="planning"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="planning">Planning</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="review">Under Review</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label htmlFor="budget">Budget</Label>
-                    <Input
-                      id="budget"
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <FormControl>
+                            <Select {...field} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="planning">
+                                  Planning
+                                </SelectItem>
+                                <SelectItem value="in-progress">
+                                  In Progress
+                                </SelectItem>
+                                <SelectItem value="review">
+                                  Under Review
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  Completed
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
                       name="budget"
-                      value={formData.budget}
-                      onChange={handleChange}
-                      placeholder="$0.00"
-                      type="text"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Budget</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="budget"
+                              type="string"
+                              placeholder="Enter your budget"
+                              className="w-full"
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                // empty → undefined, else convert to Number
+                                field.onChange(
+                                  val === "" ? undefined : Number(val)
+                                );
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+                <CardFooter />
+              </Card>
 
-            <Card className="shadow-sm bg-slate-50">
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="bg-indigo-100 p-2 rounded-full">
-                    <CirclePlus className="h-4 w-4 text-indigo-600" />
+              <Card className="shadow-sm bg-slate-50">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-indigo-100 p-2 rounded-full">
+                      <CirclePlus className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium">Pro Tip</h4>
+                      <p className="text-xs text-slate-500">
+                        Setting clear deadlines and priorities helps keep your
+                        project on track and team aligned.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-medium">Pro Tip</h4>
-                    <p className="text-xs text-slate-500">
-                      Setting clear deadlines and priorities helps keep your
-                      project on track and team aligned.
-                    </p>
+                </CardContent>
+              </Card>
+
+              {/* Team Members Form Field */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Members</CardTitle>
+                  <CardDescription>
+                    Add team members who will be working on this project.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      placeholder="Add email"
+                      value={teamMember}
+                      onChange={(e) => setTeamMember(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => {
+                        if (teamMember && !team.includes(teamMember)) {
+                          form.setValue("team", [...team, teamMember]);
+                          setTeamMember("");
+                        }
+                      }}
+                    >
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl">Team Members</CardTitle>
-                <CardDescription>
-                  Add team members who will be working on this project.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    type="email"
-                    value={teamMember}
-                    onChange={(e) => setTeamMember(e.target.value)}
-                    placeholder="Add by email address"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddTeamMember}
-                    size="icon"
-                    variant="outline"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {formData.team.length > 0 ? (
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      {formData.team.map((member, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="pl-2 pr-1 py-1 flex items-center gap-1 bg-slate-100 hover:bg-slate-200 transition-colors"
-                        >
-                          <Avatar className="h-5 w-5 mr-1">
-                            <AvatarFallback className="text-xs">
-                              {member.charAt(0).toUpperCase()}
-                            </AvatarFallback>
+                  <div className="flex flex-wrap gap-2">
+                    {team.length > 0 ? (
+                      team.map((member, idx) => (
+                        <Badge key={idx} className="flex items-center gap-1">
+                          <Avatar className="h-5 w-5">
+                            <AvatarFallback>{member.charAt(0)}</AvatarFallback>
                           </Avatar>
                           {member}
                           <Button
-                            type="button"
+                            size="icon"
                             variant="ghost"
-                            size="sm"
-                            className="h-5 w-5 p-0 rounded-full hover:bg-slate-300"
-                            onClick={() => handleRemoveTeamMember(index)}
+                            className="h-5 w-5 p-0"
+                            onClick={() => {
+                              form.setValue(
+                                "team",
+                                team.filter((_, i) => i !== idx)
+                              );
+                            }}
                           >
                             <X className="h-3 w-3" />
                           </Button>
                         </Badge>
-                      ))}
-                    </div>
+                      ))
+                    ) : (
+                      <div className="w-full text-center py-6 text-slate-500 bg-slate-50 rounded-md border border-dashed border-slate-200">
+                        <Users className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                        <p className="text-sm">No team members added yet</p>
+                        <p className="text-xs text-slate-400">
+                          Add team members by email
+                        </p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-center py-6 text-slate-500 bg-slate-50 rounded-md border border-dashed border-slate-200">
-                    <Users className="h-8 w-8 mx-auto mb-2 text-slate-400" />
-                    <p className="text-sm">No team members added yet</p>
-                    <p className="text-xs text-slate-400">
-                      Add team members by email
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base">Project Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label className="text-sm">Due Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        type="button"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <Calendar className="mr-2 h-4 w-4 text-slate-500" />
-                        {date ? (
-                          format(date, "MMM d, yyyy")
-                        ) : (
-                          <span className="text-slate-500">Select a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <CalendarComponent
-                        mode="single"
-                        selected={date}
-                        onSelect={handleDateChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+            {/* Sidebar Fields */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full text-left"
+                            >
+                              <CalendarIcon className="mr-2" />
+                              {field.value
+                                ? format(field.value, "MMM d, yyyy")
+                                : "Select date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0">
+                            <CalendarComponent
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="space-y-1">
-                  <Label className="text-sm">Priority</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      handleSelectChange("priority", value)
-                    }
-                    value={formData.priority}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">
-                        <div className="flex items-center">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                          Low
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="medium">
-                        <div className="flex items-center">
-                          <div className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></div>
-                          Medium
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="high">
-                        <div className="flex items-center">
-                          <div className="h-2 w-2 rounded-full bg-orange-500 mr-2"></div>
-                          High
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="urgent">
-                        <div className="flex items-center">
-                          <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
-                          Urgent
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Priority</FormLabel>
+                        <FormControl>
+                          <Select {...field} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Priority" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="low">Low</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="high">High</SelectItem>
+                              <SelectItem value="urgent">Urgent</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Briefcase className="mr-2 h-4 w-4" />
-                        <span>Set up workspace</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Configure your project workspace</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Briefcase className="mr-2 h-4 w-4" />
+                          <span>Set up workspace</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Configure your project workspace</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Clock className="mr-2 h-4 w-4" />
-                        <span>Set milestones</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add project milestones</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          <span>Set milestones</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Add project milestones</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Flag className="mr-2 h-4 w-4" />
-                        <span>Create first task</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Add the first task to your project</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="w-full justify-start"
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Flag className="mr-2 h-4 w-4" />
+                          <span>Create first task</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Add the first task to your project</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </CardContent>
+              </Card>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );

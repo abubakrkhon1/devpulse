@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import {
   Plus,
   ChevronRight,
@@ -11,67 +12,77 @@ import {
   Edit2,
   Trash2,
   Search,
-  Filter,
   MoreVertical,
+  Cog,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Project } from "@/types/types";
+import { formatDate } from "@/lib/utils";
 
 export default function ProjectsDashboard() {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      name: "Website Redesign",
-      description: "Redesigning the company website with new branding",
-      status: "in-progress",
-      priority: "high",
-      tasks: 12,
-      completedTasks: 5,
-      dueDate: "2025-05-15",
-    },
-    {
-      id: 2,
-      name: "Mobile App Development",
-      description: "Building a new mobile app for customer engagement",
-      status: "planning",
-      priority: "medium",
-      tasks: 23,
-      completedTasks: 0,
-      dueDate: "2025-06-30",
-    },
-    {
-      id: 3,
-      name: "Q2 Marketing Campaign",
-      description: "Planning and executing the Q2 marketing campaign",
-      status: "completed",
-      priority: "high",
-      tasks: 18,
-      completedTasks: 18,
-      dueDate: "2025-04-15",
-    },
-    {
-      id: 4,
-      name: "User Research Study",
-      description: "Conducting research with users to improve UX",
-      status: "at-risk",
-      priority: "low",
-      tasks: 8,
-      completedTasks: 2,
-      dueDate: "2025-05-05",
-    },
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [selectedTab, setSelectedTab] = useState<
+    "all" | "completed" | "in-progress" | "planning" | "at-risk"
+  >("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [newProject, setNewProject] = useState({
-    name: "",
-    description: "",
-    status: "planning",
-    priority: "medium",
-    dueDate: "",
+  const router = useRouter();
+
+  // Fetch projects once
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/projects/fetchProjects");
+        if (!res.ok) throw new Error("Failed to load projects");
+        const data = await res.json();
+        console.log(data);
+        setProjects(data.projects);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
+
+  // Filtered list based on tab and search
+  const filteredProjects = projects.filter((project) => {
+    if (selectedTab !== "all" && project.status !== selectedTab) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      if (!project.title.toLowerCase().includes(term)) {
+        return false;
+      }
+    }
+    return true;
   });
 
-  const getPriorityClass = (priority) => {
+  const deleteProject = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+    try {
+      const res = await fetch(`/api/projects/deleteProject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setProjects((prev) => prev.filter((p) => p._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete project.");
+    }
+  };
+
+  const getPriorityClass = (priority: Project["priority"]) => {
     switch (priority) {
+      case "urgent":
+        return "bg-red-200 text-red-900";
       case "high":
         return "bg-red-100 text-red-800";
       case "medium":
@@ -83,22 +94,20 @@ export default function ProjectsDashboard() {
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: Project["status"]) => {
     switch (status) {
-      case "completed":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "planning":
+        return <Cog className="w-4 h-4 text-gray-600" />;
       case "in-progress":
         return <Clock className="w-4 h-4 text-blue-600" />;
-      case "planning":
-        return <Circle className="w-4 h-4 text-gray-600" />;
-      case "at-risk":
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "review":
         return <AlertCircle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Circle className="w-4 h-4 text-gray-600" />;
     }
   };
 
-  const getStatusClass = (status) => {
+  const getStatusClass = (status: Project["status"]) => {
     switch (status) {
       case "completed":
         return "text-green-600";
@@ -106,55 +115,10 @@ export default function ProjectsDashboard() {
         return "text-blue-600";
       case "planning":
         return "text-gray-600";
-      case "at-risk":
+      case "review":
         return "text-red-600";
-      default:
-        return "text-gray-600";
     }
   };
-
-  const handleAddProject = () => {
-    if (newProject.name.trim() === "") return;
-
-    setProjects([
-      ...projects,
-      {
-        id: projects.length + 1,
-        ...newProject,
-        tasks: 0,
-        completedTasks: 0,
-      },
-    ]);
-
-    setNewProject({
-      name: "",
-      description: "",
-      status: "planning",
-      priority: "medium",
-      dueDate: "",
-    });
-
-    setShowNewProjectModal(false);
-  };
-
-  const deleteProject = (id) => {
-    setProjects(projects.filter((project) => project.id !== id));
-  };
-
-  const filteredProjects = projects.filter((project) => {
-    // Filter by tab selection
-    if (selectedTab !== "all" && project.status !== selectedTab) return false;
-
-    // Filter by search term
-    if (
-      searchTerm &&
-      !project.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !project.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-      return false;
-
-    return true;
-  });
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
@@ -169,75 +133,39 @@ export default function ProjectsDashboard() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <div className="flex space-x-4">
-              <button
-                onClick={() => setSelectedTab("all")}
-                className={`px-3 py-1 rounded-md ${
-                  selectedTab === "all"
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setSelectedTab("in-progress")}
-                className={`px-3 py-1 rounded-md ${
-                  selectedTab === "in-progress"
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                In Progress
-              </button>
-              <button
-                onClick={() => setSelectedTab("planning")}
-                className={`px-3 py-1 rounded-md ${
-                  selectedTab === "planning"
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                Planning
-              </button>
-              <button
-                onClick={() => setSelectedTab("completed")}
-                className={`px-3 py-1 rounded-md ${
-                  selectedTab === "completed"
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                Completed
-              </button>
-              <button
-                onClick={() => setSelectedTab("at-risk")}
-                className={`px-3 py-1 rounded-md ${
-                  selectedTab === "at-risk"
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                At Risk
-              </button>
+              {["all", "in-progress", "planning", "completed", "review"].map(
+                (tab) => (
+                  <Button
+                    key={tab}
+                    variant={selectedTab === tab ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setSelectedTab(tab as any)}
+                  >
+                    {tab
+                      .replace("-", " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </Button>
+                )
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search projects..."
-                  className="pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-9 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 w-64"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button
-                onClick={() => setShowNewProjectModal(true)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              <Button
+                onClick={() => router.push("/projects/new-project")}
+                size="sm"
+                className="p-5 bg-primary text-white"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                New Project
-              </button>
+                <Plus className="w-4 h-4" /> New Project
+              </Button>
             </div>
           </div>
 
@@ -254,13 +182,35 @@ export default function ProjectsDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredProjects.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="p-6 text-center">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={6} className="p-6 text-center text-red-500">
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredProjects.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-12 text-center">
+                      No projects found
+                    </td>
+                  </tr>
+                ) : (
                   filteredProjects.map((project) => (
-                    <tr key={project.id} className="hover:bg-gray-50">
+                    <tr
+                      key={project._id}
+                      className="hover:bg-gray-50"
+                      onClick={() => router.push(`/projects/${project._id}`)}
+                    >
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-gray-900">
-                            {project.name}
+                            {project.title}
                           </div>
                           <div className="text-sm text-gray-500 truncate max-w-xs">
                             {project.description}
@@ -296,232 +246,47 @@ export default function ProjectsDashboard() {
                             <div
                               className="bg-blue-600 h-2 rounded-full"
                               style={{
-                                width: `${
-                                  project.tasks > 0
-                                    ? (project.completedTasks / project.tasks) *
-                                      100
-                                    : 0
-                                }%`,
+                                width: `${project.progress}%`,
                               }}
-                            ></div>
+                            />
                           </div>
-                          <span className="text-sm text-gray-500">
-                            {project.completedTasks}/{project.tasks}
+                          <span className="text-sm ml-2 text-gray-500">
+                            {project.progress}%
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(project.dueDate).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {formatDate(new Date(project.dueDate))}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm">
+                      <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">
-                          <button className="text-gray-400 hover:text-gray-500">
+                          <button
+                            onClick={() =>
+                              router.push(`/projects/${project._id}/edit`)
+                            }
+                            className="text-gray-400 hover:text-gray-600"
+                          >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => deleteProject(project._id)}
                             className="text-gray-400 hover:text-red-500"
-                            onClick={() => deleteProject(project.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                          <button className="text-gray-400 hover:text-gray-500">
+                          <button className="text-gray-400 hover:text-gray-600">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
                     </tr>
                   ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center">
-                        <svg
-                          className="h-12 w-12 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                          />
-                        </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">
-                          No projects found
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {searchTerm
-                            ? "Try adjusting your search terms"
-                            : "Get started by creating a new project"}
-                        </p>
-                        {!searchTerm && (
-                          <button
-                            onClick={() => setShowNewProjectModal(true)}
-                            className="mt-3 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            New Project
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      {/* New Project Modal */}
-      {showNewProjectModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                Create New Project
-              </h3>
-              <button
-                onClick={() => setShowNewProjectModal(false)}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter project name"
-                    value={newProject.name}
-                    onChange={(e) =>
-                      setNewProject({ ...newProject, name: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="description"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Description
-                  </label>
-                  <textarea
-                    id="description"
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter project description"
-                    value={newProject.description}
-                    onChange={(e) =>
-                      setNewProject({
-                        ...newProject,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="status"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Status
-                    </label>
-                    <select
-                      id="status"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={newProject.status}
-                      onChange={(e) =>
-                        setNewProject({ ...newProject, status: e.target.value })
-                      }
-                    >
-                      <option value="planning">Planning</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="at-risk">At Risk</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="priority"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Priority
-                    </label>
-                    <select
-                      id="priority"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={newProject.priority}
-                      onChange={(e) =>
-                        setNewProject({
-                          ...newProject,
-                          priority: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="dueDate"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    id="dueDate"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    value={newProject.dueDate}
-                    onChange={(e) =>
-                      setNewProject({ ...newProject, dueDate: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowNewProjectModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddProject}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                disabled={!newProject.name.trim()}
-              >
-                Create Project
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

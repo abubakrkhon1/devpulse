@@ -360,7 +360,7 @@ export async function newIdea(data: any) {
 
     const existingUser = await db.collection("ideas").findOne({ projectName });
 
-    if (existingUser) return { message: "User already exists", status: 400 };
+    if (existingUser) return { message: "Idea already exists", status: 400 };
 
     const result = await db.collection("ideas").insertOne({
       projectName,
@@ -393,6 +393,69 @@ export async function fetchIdeas() {
     return {
       message: "Ideas sucessfully fetched!",
       ideas,
+      status: 200,
+    };
+  } catch (error) {
+    return { message: "Internal Server Error", status: 500 };
+  }
+}
+
+export async function newProject(data: any) {
+  const {
+    title,
+    description,
+    dueDate,
+    priority,
+    status,
+    team,
+    category,
+    budget,
+    progress,
+  } = data;
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    const existingUser = await db.collection("projects").findOne({ title });
+
+    if (existingUser) return { message: "Project already exists", status: 400 };
+
+    const result = await db.collection("projects").insertOne({
+      title,
+      description,
+      dueDate,
+      priority,
+      status,
+      team,
+      category,
+      budget,
+      progress: 0,
+      createdAt: new Date(),
+    });
+
+    return {
+      message: "Idea sucessfully created!",
+      result,
+      status: 200,
+    };
+  } catch (error) {
+    return { message: "Internal Server Error", status: 500 };
+  }
+}
+
+export async function fetchProjects() {
+  try {
+    const client = await clientPromise;
+    const db = client.db("devpulse");
+
+    const projects = await db.collection("projects").find({}).toArray();
+
+    if (!projects) return { message: "No projects", status: 404 };
+
+    return {
+      message: "Projects sucessfully fetched!",
+      projects,
       status: 200,
     };
   } catch (error) {
