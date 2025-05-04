@@ -36,10 +36,13 @@ export default function ProjectsDashboard() {
     async function fetchProjects() {
       try {
         setLoading(true);
+
         const res = await fetch("/api/projects/fetchProjects");
         if (!res.ok) throw new Error("Failed to load projects");
+
         const data = await res.json();
         console.log(data);
+
         setProjects(data.projects);
       } catch (err: any) {
         console.error(err);
@@ -159,9 +162,7 @@ export default function ProjectsDashboard() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button
-                onClick={() => router.push("/projects/new-project")}
-              >
+              <Button onClick={() => router.push("/projects/new-project")}>
                 New Project
               </Button>
             </div>
@@ -181,11 +182,29 @@ export default function ProjectsDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="p-6 text-center">
-                      Loading...
-                    </td>
-                  </tr>
+                  // Skeleton rows
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/4 ml-auto"></div>
+                      </td>
+                    </tr>
+                  ))
                 ) : error ? (
                   <tr>
                     <td colSpan={6} className="p-6 text-center text-red-500">

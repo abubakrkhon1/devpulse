@@ -26,33 +26,11 @@ import {
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 
-const routes = [
-  {
-    name: "Account",
-    url: "/profile",
-    icon: IconUserCircle,
-  },
-  {
-    name: "Billing",
-    url: "/profile",
-    icon: IconCreditCard,
-  },
-  {
-    name: "Notifications",
-    url: "/profile",
-    icon: IconNotification,
-  },
-  {
-    name: "Logout",
-    url: "/logout",
-    icon: IconLogout,
-  },
-];
-
 export function NavUser({
   user,
 }: {
   user: {
+    userId: string;
     name: string;
     email: string;
     avatar: string;
@@ -60,6 +38,28 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const routes = [
+    {
+      name: "Account",
+      url: `/profiles/${user.userId}`,
+      icon: IconUserCircle,
+    },
+    {
+      name: "Billing",
+      url: "/profile",
+      icon: IconCreditCard,
+    },
+    {
+      name: "Notifications",
+      url: "/profile",
+      icon: IconNotification,
+    },
+    {
+      name: "Logout",
+      url: "/logout",
+      icon: IconLogout,
+    },
+  ];
 
   return (
     <SidebarMenu>
@@ -109,7 +109,7 @@ export function NavUser({
               {routes.map((route) => (
                 <div key={route.name}>
                   <DropdownMenuItem
-                    onClick={() => router.push(route.url)}
+                    onClick={() => router.push(`/profiles/${user.userId}`)}
                     className="transition"
                   >
                     <route.icon />

@@ -1,4 +1,9 @@
-import { LoginDevice, User, UserWithoutPassword } from "@/types/types";
+import {
+  LoginDevice,
+  OtherProfile,
+  User,
+  UserWithoutPassword,
+} from "@/types/types";
 import clientPromise from "./mongo";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -38,6 +43,7 @@ export async function signUp(data: User) {
       twoFactorEnabled,
       verified,
       avatar: "https://github.com/shadcn.png",
+      friends: [],
       createdAt: new Date(),
     });
 
@@ -182,6 +188,21 @@ export async function checkAuth() {
     console.error(err);
     return { message: "Internal server error", status: 500 };
   }
+}
+
+export async function fetchProfile(userId: string) {
+  if (!ObjectId.isValid(userId)) {
+    console.warn("fetchProfile: invalid ObjectId", userId);
+    return { profile: null };
+  }
+
+  const client = await clientPromise;
+  const user = await client
+    .db("devpulse")
+    .collection("users")
+    .findOne({ _id: new ObjectId(userId) }, { projection: { password: 0 } });
+
+  return { profile: user || null };
 }
 
 export async function updateBio(data: any) {

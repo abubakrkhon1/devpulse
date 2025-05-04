@@ -18,7 +18,7 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useState } from "react";
 import { updatePassword } from "@/lib/dbActions";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/hooks/useAuthedUser";
 
 export default function SecuritySection() {
   const [form, setForm] = useState({ password: "", newPassword: "" });

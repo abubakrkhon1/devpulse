@@ -33,7 +33,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Layers } from "lucide-react";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/hooks/useAuthedUser";
 
 const data = {
   navMain: [
@@ -48,7 +48,11 @@ const data = {
       url: "/ideas",
       icon: IconChartBar,
       itemsSub: [
-        { title: "Brainstorm idea", url: "/projects/brainstorm-idea", icon: IconFolder },
+        {
+          title: "Brainstorm idea",
+          url: "/projects/brainstorm-idea",
+          icon: IconFolder,
+        },
         { title: "See your ideas", url: "/ideas", icon: IconFolder },
       ],
     },
@@ -67,11 +71,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const userFixed =
     user != null
       ? {
+          userId: user._id,
           name: user.name,
           email: user.email,
           avatar: user.avatar ?? "https://github.com/shadcn.png",
         }
-      : { name: "Guest", email: "", avatar: "" };
+      : { userId: "", name: "Guest", email: "", avatar: "" };
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

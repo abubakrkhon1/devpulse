@@ -102,6 +102,63 @@ export default function DashboardPage() {
     ? "opacity-100 translate-y-0"
     : "opacity-0 translate-y-4";
 
+  if (loading) {
+    return (
+      <div className="w-full p-6 md:p-8 space-y-8 animate-pulse">
+        {/* Header skeleton */}
+        <div className="h-8 bg-muted rounded w-1/3"></div>
+        <div className="h-6 bg-muted rounded w-1/4"></div>
+
+        {/* Overview Cards skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded" />
+            ))}
+        </div>
+
+        {/* Quick Actions skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="h-10 bg-muted rounded" />
+            ))}
+        </div>
+
+        {/* Tabs & Project cards skeleton */}
+        <div className="grid gap-6 md:grid-cols-7">
+          <div className="md:col-span-4 space-y-4">
+            <div className="h-10 bg-muted rounded"></div>
+            {Array(3)
+              .fill(0)
+              .map((_, i) => (
+                <div key={i} className="h-48 bg-muted rounded" />
+              ))}
+          </div>
+          <div className="md:col-span-3 space-y-4">
+            {Array(2)
+              .fill(0)
+              .map((_, i) => (
+                <div key={i} className="h-32 bg-muted rounded" />
+              ))}
+          </div>
+        </div>
+
+        {/* Recent Activity table skeleton */}
+        <div className="overflow-x-auto">
+          <div className="h-8 bg-muted rounded w-1/5 mb-4"></div>
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="h-12 bg-muted rounded mb-2" />
+            ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full p-6 md:p-8 space-y-8 bg-gradient-to-b from-background to-background/80">
       {/* Dashboard Header with Greeting */}
@@ -130,7 +187,7 @@ export default function DashboardPage() {
           {
             title: "Total Projects",
             value: projects.length,
-            change: "+2 from last month",
+            change: "+# from last month",
             icon: <LineChart className="h-5 w-5 text-primary" />,
             bgColor:
               "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20",
@@ -139,7 +196,7 @@ export default function DashboardPage() {
           {
             title: "Tasks Completed",
             value: "#",
-            change: "83% completion rate",
+            change: "#% completion rate",
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
             bgColor:
               "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20",
@@ -148,7 +205,7 @@ export default function DashboardPage() {
           {
             title: "Team Members",
             value: "#",
-            change: "2 active now",
+            change: "# active now",
             icon: <Users className="h-5 w-5 text-violet-500" />,
             bgColor:
               "bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/20 dark:to-violet-900/20",
@@ -157,7 +214,7 @@ export default function DashboardPage() {
           {
             title: "Brainstormed Ideas",
             value: ideas.length,
-            change: "1 in review",
+            change: "# in review",
             icon: <Star className="h-5 w-5 text-amber-500" />,
             bgColor:
               "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/20 dark:to-amber-900/20",

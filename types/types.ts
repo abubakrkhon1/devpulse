@@ -49,3 +49,19 @@ export interface Project {
 }
 
 export type UserWithoutPassword = Omit<User, "password">;
+
+export type OtherProfile = {
+  _id: string;
+  name: string;
+  email: string;
+  jobTitle: string;
+  department: string;
+  role: string;
+  bio: string;
+  verified: boolean;
+  joinedAt: Date;
+  lastActive: Date;
+  avatar: string;
+  isOnline: true;
+  createdAt: Date;
+};

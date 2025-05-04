@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
   Bell,
-  Key,
   LogOut,
   User as UserIcon,
   Briefcase,
@@ -20,14 +19,12 @@ import {
   Mail,
   CheckCircle,
   Clock,
-  Lock,
   Globe,
   Share2,
-  AlertTriangle,
-  Icon,
   CircleX,
   LucideIcon,
   Dot,
+  ArrowLeft,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,13 +36,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useUser } from "@/hooks/useUser";
-import { UserOnlineContext } from "@/hooks/useUserOnlineContext";
 import { useTheme } from "next-themes";
 import SecuritySection from "@/components/profile-ui/SecuritySection";
 import NotificationSection from "@/components/profile-ui/NotificationSection";
 import BillingSection from "@/components/profile-ui/BillingSection";
 import { formatDate } from "@/lib/utils";
+import { User } from "@/types/types";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useRouter } from "next/navigation";
 
 // Missing SelectComponent
 const Select = ({ children, defaultValue, ...props }: any) => (
@@ -58,20 +56,27 @@ const Select = ({ children, defaultValue, ...props }: any) => (
   </select>
 );
 
-export default function AccountPage() {
+export default function UserProfile({
+  user,
+  loading,
+  error,
+}: {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+}) {
   const { setTheme, theme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [showMessage, setShowMessage] = useState<{
     message: string;
     status: boolean;
-    icon: LucideIcon; // <-- type properly
+    icon: LucideIcon;
   }>({
     message: "",
     status: false,
     icon: CheckCircle,
   });
-  const { user, loading, error } = useUser();
 
   const [form, setForm] = useState({
     userId: "",
@@ -93,8 +98,7 @@ export default function AccountPage() {
     }
   }, [user]);
 
-  // Inside your AccountPage component
-  const onlineStatus = useContext(UserOnlineContext);
+  const { isOnline, onlineUsers } = useOnlineStatus(user?._id);
 
   // Fetch user data
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -138,19 +142,9 @@ export default function AccountPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background to-secondary/5">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-primary/10 animate-pulse"></div>
-          <div className="h-4 w-48 bg-primary/10 rounded animate-pulse"></div>
-          <div className="h-3 w-32 bg-primary/10 rounded animate-pulse"></div>
-        </div>
-      </div>
-    );
-  }
-
   let currentDeviceIndex = 0;
+
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/5">
@@ -158,6 +152,14 @@ export default function AccountPage() {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 backdrop-blur-sm z-0"></div>
         <div className="container max-w-6xl mx-auto pt-8 pb-12 px-4 relative z-10">
+          <button
+            onClick={() => router.back()}
+            className="mb-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </button>
+
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
               <AvatarImage src={user?.avatar || ""} alt={user?.name} />
@@ -192,7 +194,7 @@ export default function AccountPage() {
               </div>
 
               <div className="my-1 text-muted-foreground">
-                {onlineStatus ? (
+                {isOnline ? (
                   <h4 className="text-green-500 flex">
                     <Dot /> {"Online"}
                   </h4>
@@ -483,10 +485,10 @@ export default function AccountPage() {
                       <span className="text-muted-foreground flex items-center gap-1">
                         <div
                           className={`${
-                            onlineStatus ? "bg-green-500" : "bg-primary"
+                            isOnline ? "bg-green-500" : "bg-primary"
                           } h-2 w-2 rounded-full`}
                         ></div>
-                        {onlineStatus ? (
+                        {isOnline ? (
                           <span className="text-green-500 pl-1">
                             Active now
                           </span>
