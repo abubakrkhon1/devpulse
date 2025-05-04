@@ -78,6 +78,8 @@ export default function UserProfile({
   const { setTheme, theme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>("profile");
   const [isSaving, setIsSaving] = useState(false);
+  const friends = user?.friends;
+  const [friendList, setFriendList] = useState<Friend[]>(friends ?? []);
   const [showMessage, setShowMessage] = useState<{
     message: string;
     status: boolean;
@@ -111,7 +113,10 @@ export default function UserProfile({
   const { isOnline, onlineUsers } = useOnlineStatus(user?._id);
 
   const [tab, setTab] = useState("all");
-  const friends = user?.friends;
+
+  useEffect(() => {
+    setFriendList(friends ?? []);
+  }, [friends]);
 
   // Fetch user data
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -172,6 +177,7 @@ export default function UserProfile({
     await refresh();
   };
   const handleRespond = async (requester: string, accept: boolean) => {
+    console.log(requester, accept);
     await respondFriendRequest(requester, user!._id, accept);
     await refresh();
   };
@@ -521,9 +527,9 @@ export default function UserProfile({
                     </TabsList>
 
                     <TabsContent value="all" className="mt-0">
-                      {friends && friends.length > 0 ? (
+                      {friendList && friendList.length > 0 ? (
                         <div className="space-y-4">
-                          {friends.map((friend: Friend) => (
+                          {friendList.map((friend: Friend) => (
                             <div
                               key={
                                 typeof friend === "object" ? friend._id : friend

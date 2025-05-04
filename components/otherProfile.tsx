@@ -38,17 +38,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
-import { OtherProfile, User } from "@/types/types";
+import { Friend, OtherProfile, User } from "@/types/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import {
   cancelFriendRequest,
+  removeFriend,
   respondFriendRequest,
   sendFriendRequest,
   useFriendRequests,
 } from "@/hooks/useFriends";
+import { ChatPanel } from "./chat-panel";
 
 const ViewUserProfile = ({
   profile,
@@ -98,7 +100,9 @@ const ViewUserProfile = ({
     if (profile && currentUser) {
       // Mock check if users are friends
       console.log(profile, currentUser);
-      const status = currentUser.friends.some((f) => f._id === profile._id);
+      const status = currentUser.friends.some(
+        (f: Friend) => f._id === profile._id
+      );
       console.log(status);
       if (status) setFriendStatus("accepted");
     }
@@ -130,10 +134,6 @@ const ViewUserProfile = ({
       case "reject":
         setFriendStatus("none");
         showNotification("Friend request declined", "warning");
-        break;
-      case "remove":
-        setFriendStatus("none");
-        showNotification("Friend removed", "warning");
         break;
       case "cancel":
         break;
@@ -171,15 +171,24 @@ const ViewUserProfile = ({
     setFriendStatus("pending");
     showNotification("Friend request sent!", "success");
   };
+
   const handleCancel = async (otherId: string) => {
     await cancelFriendRequest(currentUser?._id, otherId);
     await refresh();
     setFriendStatus("none");
     showNotification("Friend request cancelled", "warning");
   };
+
   const handleRespond = async (requester: string, accept: boolean) => {
     await respondFriendRequest(requester, currentUser?._id, accept);
     await refresh();
+  };
+
+  const handleFriendRemove = async (friendId: any) => {
+    await removeFriend(currentUser?._id, friendId);
+    await refresh();
+    setFriendStatus("none");
+    showNotification("Friend removed", "warning");
   };
 
   if (loading)
@@ -333,15 +342,8 @@ const ViewUserProfile = ({
               {friendStatus === "accepted" && (
                 <div className="flex flex-col gap-2 w-full md:w-auto">
                   <Button
-                    variant="default"
-                    className="w-full flex items-center gap-2"
-                  >
-                    <MessageCircle size={16} />
-                    Message
-                  </Button>
-                  <Button
                     variant="outline"
-                    onClick={() => handleFriendAction("remove")}
+                    onClick={() => handleFriendRemove(profile._id)}
                     className="w-full flex items-center gap-2"
                   >
                     <UserMinus size={16} />
@@ -393,23 +395,25 @@ const ViewUserProfile = ({
           </div>
         )}
 
-        {/* Profile Tabs */}
-        <Tabs
-          defaultValue="about"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="friends">Friends</TabsTrigger>
-          </TabsList>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main content column */}
+          <div className="lg:col-span-2">
+            {/* Profile Tabs */}
+            <Tabs
+              defaultValue="about"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
+                <TabsTrigger value="about">About</TabsTrigger>
+                <TabsTrigger value="posts">Posts</TabsTrigger>
+                <TabsTrigger value="friends">Friends</TabsTrigger>
+              </TabsList>
 
-          {/* About Tab */}
-          <TabsContent value="about" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
+              {/* About Tab */}
+              <TabsContent value="about" className="space-y-8">
                 <Card className="overflow-hidden border-0 shadow-md">
                   <CardHeader className="bg-secondary/5 border-b border-border/50">
                     <CardTitle className="text-xl flex items-center gap-2">
@@ -438,20 +442,20 @@ const ViewUserProfile = ({
                         </h3>
                         <ul className="space-y-3">
                           {/* {profile.education ? (
-                            profile.education.map((edu, index) => (
-                              <li key={index} className="flex flex-col">
-                                <span className="font-medium">
-                                  {edu.institution}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {edu.degree}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {edu.years}
-                                </span>
-                              </li>
-                            ))
-                          ) : ( */}
+                        profile.education.map((edu, index) => (
+                          <li key={index} className="flex flex-col">
+                            <span className="font-medium">
+                              {edu.institution}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {edu.degree}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {edu.years}
+                            </span>
+                          </li>
+                        ))
+                      ) : ( */}
                           <li className="text-muted-foreground italic">
                             No education info available
                           </li>
@@ -466,20 +470,20 @@ const ViewUserProfile = ({
                         </h3>
                         <ul className="space-y-3">
                           {/* {profile.experience ? (
-                            profile.experience.map((exp, index) => (
-                              <li key={index} className="flex flex-col">
-                                <span className="font-medium">
-                                  {exp.company}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {exp.position}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {exp.years}
-                                </span>
-                              </li>
-                            ))
-                          ) : ( */}
+                        profile.experience.map((exp, index) => (
+                          <li key={index} className="flex flex-col">
+                            <span className="font-medium">
+                              {exp.company}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {exp.position}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {exp.years}
+                            </span>
+                          </li>
+                        ))
+                      ) : ( */}
                           <li className="text-muted-foreground italic">
                             No experience info available
                           </li>
@@ -496,16 +500,16 @@ const ViewUserProfile = ({
                       </h3>
                       <div className="flex flex-wrap gap-2">
                         {/* {profile.interests ? (
-                          profile.interests.map((interest, index) => (
-                            <Badge
-                              key={index}
-                              variant="secondary"
-                              className="px-3 py-1"
-                            >
-                              {interest}
-                            </Badge>
-                          ))
-                        ) : ( */}
+                      profile.interests.map((interest, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="px-3 py-1"
+                        >
+                          {interest}
+                        </Badge>
+                      ))
+                    ) : ( */}
                         <p className="text-muted-foreground italic">
                           No interests listed
                         </p>
@@ -514,150 +518,147 @@ const ViewUserProfile = ({
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-
-              <div className="space-y-6">
-                <Card className="overflow-hidden border-0 shadow-md">
-                  <CardHeader className="bg-secondary/5 border-b border-border/50">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Users size={18} className="text-primary" />
-                      Mutual Connections
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="">
-                    {mutualFriends.length > 0 ? (
-                      <div className="space-y-4">
-                        {mutualFriends.map((friend) => (
-                          <div
-                            key={friend._id}
-                            className="flex items-center gap-3"
-                          >
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage
-                                src={friend.avatar}
-                                alt={friend.name}
-                              />
-                              <AvatarFallback className="text-xs">
-                                {friend.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 overflow-hidden">
-                              <p className="font-medium truncate">
-                                {friend.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {friend.jobTitle}
-                              </p>
+                <div className="space-y-6">
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <CardHeader className="bg-secondary/5 border-b border-border/50">
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Users size={18} className="text-primary" />
+                        Mutual Connections
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      {mutualFriends.length > 0 ? (
+                        <div className="space-y-4">
+                          {mutualFriends.map((friend) => (
+                            <div
+                              key={friend._id}
+                              className="flex items-center gap-3"
+                            >
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage
+                                  src={friend.avatar}
+                                  alt={friend.name}
+                                />
+                                <AvatarFallback className="text-xs">
+                                  {friend.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 overflow-hidden">
+                                <p className="font-medium truncate">
+                                  {friend.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {friend.jobTitle}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full mt-4"
-                        >
-                          View All Mutual Connections
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-4"
+                          >
+                            View All Mutual Connections
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-center py-2">
+                          No mutual connections
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <CardHeader className="bg-secondary/5 border-b border-border/50">
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Coffee size={18} className="text-primary" />
+                        Let's Connect
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <p className="text-sm">
+                          Connect with {profile.name.split(" ")[0]} on their
+                          preferred platforms:
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* {profile.socialLinks ? (
+                      Object.entries(profile.socialLinks).map(
+                        ([platform, url]) => (
+                          <Button
+                            key={platform}
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
+                            <span className="capitalize">{platform}</span>
+                          </Button>
+                        )
+                      )
+                    ) : ( */}
+                          <p className="text-muted-foreground col-span-2 text-center">
+                            No social profiles shared
+                          </p>
+                          {/* )} */}
+                        </div>
+
+                        <div className="pt-2">
+                          <Button
+                            size="sm"
+                            className="w-full flex gap-2 items-center"
+                          >
+                            <Share2 size={14} />
+                            Share Profile
+                          </Button>
+                        </div>
                       </div>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-2">
-                        No mutual connections
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
 
-                <Card className="overflow-hidden border-0 shadow-md">
+              {/* Posts Tab */}
+              <TabsContent value="posts">
+                <Card className="border-0 shadow-md">
                   <CardHeader className="bg-secondary/5 border-b border-border/50">
                     <CardTitle className="text-xl flex items-center gap-2">
-                      <Coffee size={18} className="text-primary" />
-                      Let's Connect
+                      <BookOpen size={18} className="text-primary" />
+                      Posts by {profile.name.split(" ")[0]}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <p className="text-sm">
-                        Connect with {profile.name.split(" ")[0]} on their
-                        preferred platforms:
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="rounded-full bg-secondary/20 p-6 mb-4">
+                        <BookOpen size={32} className="text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">No Posts Yet</h3>
+                      <p className="text-muted-foreground text-center max-w-sm">
+                        {profile.name.split(" ")[0]} hasn't shared any posts
+                        yet. Check back later for updates!
                       </p>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        {/* {profile.socialLinks ? (
-                          Object.entries(profile.socialLinks).map(
-                            ([platform, url]) => (
-                              <Button
-                                key={platform}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start"
-                              >
-                                <span className="capitalize">{platform}</span>
-                              </Button>
-                            )
-                          )
-                        ) : ( */}
-                        <p className="text-muted-foreground col-span-2 text-center">
-                          No social profiles shared
-                        </p>
-                        {/* )} */}
-                      </div>
-
-                      <div className="pt-2">
-                        <Button
-                          size="sm"
-                          className="w-full flex gap-2 items-center"
-                        >
-                          <Share2 size={14} />
-                          Share Profile
-                        </Button>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </div>
-          </TabsContent>
+              </TabsContent>
 
-          {/* Posts Tab */}
-          <TabsContent value="posts">
-            <Card className="border-0 shadow-md">
-              <CardHeader className="bg-secondary/5 border-b border-border/50">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <BookOpen size={18} className="text-primary" />
-                  Posts by {profile.name.split(" ")[0]}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="rounded-full bg-secondary/20 p-6 mb-4">
-                    <BookOpen size={32} className="text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No Posts Yet</h3>
-                  <p className="text-muted-foreground text-center max-w-sm">
-                    {profile.name.split(" ")[0]} hasn't shared any posts yet.
-                    Check back later for updates!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Friends Tab */}
-          <TabsContent value="friends">
-            <Card className="border-0 shadow-md">
-              <CardHeader className="bg-secondary/5 border-b border-border/50">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Users size={18} className="text-primary" />
-                  {profile.name.split(" ")[0]}'s Connections
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {/* {profile.friends ? (
+              {/* Friends Tab */}
+              <TabsContent value="friends">
+                <Card className="border-0 shadow-md">
+                  <CardHeader className="bg-secondary/5 border-b border-border/50">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Users size={18} className="text-primary" />
+                      {profile.name.split(" ")[0]}'s Connections
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {/* {profile.friends ? (
                     profile.friends.map((friend) => (
                       <Card
                         key={friend._id}
@@ -697,22 +698,33 @@ const ViewUserProfile = ({
                       </Card>
                     ))
                   ) : ( */}
-                  <div className="col-span-full flex flex-col items-center justify-center py-12">
-                    <div className="rounded-full bg-secondary/20 p-6 mb-4">
-                      <Users size={32} className="text-muted-foreground" />
+                      <div className="col-span-full flex flex-col items-center justify-center py-12">
+                        <div className="rounded-full bg-secondary/20 p-6 mb-4">
+                          <Users size={32} className="text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">
+                          No Connections
+                        </h3>
+                        <p className="text-muted-foreground text-center max-w-sm">
+                          {profile.name.split(" ")[0]} doesn't have any public
+                          connections to display.
+                        </p>
+                      </div>
+                      {/* )} */}
                     </div>
-                    <h3 className="text-lg font-medium mb-2">No Connections</h3>
-                    <p className="text-muted-foreground text-center max-w-sm">
-                      {profile.name.split(" ")[0]} doesn't have any public
-                      connections to display.
-                    </p>
-                  </div>
-                  {/* )} */}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Right sidebar - Chat panel */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4 w-[400px] h-[450px]">
+              {profile?._id ? <ChatPanel profileId={profile._id} /> : null}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -80,7 +80,9 @@ export async function respondFriendRequest(
   recipient?: string,
   accept?: boolean
 ) {
-  if (!requester || !recipient || !accept) return;
+  console.log(requester, recipient, accept);
+  if (!requester || !recipient) return;
+  console.log("requester:",requester," recipient:",recipient,accept)
 
   const res = await fetch("/api/friend-requests", {
     method: "PATCH",
@@ -88,4 +90,16 @@ export async function respondFriendRequest(
     body: JSON.stringify({ requester, recipient, accept }),
   });
   if (!res.ok) throw new Error(`Response failed: ${res.status}`);
+}
+
+export async function removeFriend(userId?: string, friendId?: string) {
+  if (!userId || !friendId) return;
+
+  const res = await fetch("/api/friend-requests/remove", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, friendId }),
+  });
+
+  if (!res.ok) throw new Error(`Remove failed: ${res.status}`);
 }

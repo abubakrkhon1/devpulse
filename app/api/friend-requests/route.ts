@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
 // Accept friend request
 export async function PATCH(req: NextRequest) {
   const { requester, recipient, accept } = await req.json();
+  console.log(requester,recipient,accept)
   const client = await clientPromise;
   const db = client.db("devpulse");
   const filter = {
