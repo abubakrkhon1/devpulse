@@ -180,6 +180,7 @@ export async function checkAuth() {
       avatar: user.avatar,
       isOnline: user.isOnline,
       loginDevices: user.loginDevices,
+      friends: user.friends,
       createdAt: user.createdAt.toISOString(),
     };
 

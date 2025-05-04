@@ -35,6 +35,12 @@ export const useSocket = (userId: string | undefined) => {
     return () => {
       socket.disconnect();
       setSocket(null);
+      fetch("/api/profiles/offline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userId),
+        keepalive: true,
+      }).catch(console.error);
     };
   }, [userId]);
 };

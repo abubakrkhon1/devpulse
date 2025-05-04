@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,10 @@ import {
   LucideIcon,
   Dot,
   ArrowLeft,
+  Contact,
+  UserPlus,
+  UserMinus,
+  UserCheck,
 } from "lucide-react";
 import {
   Dialog,
@@ -41,9 +45,15 @@ import SecuritySection from "@/components/profile-ui/SecuritySection";
 import NotificationSection from "@/components/profile-ui/NotificationSection";
 import BillingSection from "@/components/profile-ui/BillingSection";
 import { formatDate } from "@/lib/utils";
-import { User } from "@/types/types";
+import { Friend, User } from "@/types/types";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import {
+  cancelFriendRequest,
+  respondFriendRequest,
+  useFriendRequests,
+} from "@/hooks/useFriends";
 
 // Missing SelectComponent
 const Select = ({ children, defaultValue, ...props }: any) => (
@@ -100,6 +110,9 @@ export default function UserProfile({
 
   const { isOnline, onlineUsers } = useOnlineStatus(user?._id);
 
+  const [tab, setTab] = useState("all");
+  const friends = user?.friends;
+
   // Fetch user data
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +158,23 @@ export default function UserProfile({
   let currentDeviceIndex = 0;
 
   const router = useRouter();
+
+  const {
+    incoming,
+    outgoing,
+    friendRequestError,
+    friendRequestLoading,
+    refresh,
+  } = useFriendRequests(user?._id);
+
+  const handleCancel = async (otherId: string) => {
+    await cancelFriendRequest(user?._id, otherId);
+    await refresh();
+  };
+  const handleRespond = async (requester: string, accept: boolean) => {
+    await respondFriendRequest(requester, user!._id, accept);
+    await refresh();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/5">
@@ -466,6 +496,234 @@ export default function UserProfile({
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Friends & Requests Tab */}
+              <Card className="mt-8 overflow-hidden border-0 shadow-md">
+                <CardHeader className="bg-secondary/5 border-b border-border/50">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <UserIcon size={18} className="text-primary" />
+                    Friends & Requests
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <Tabs
+                    value={tab}
+                    onValueChange={(value: string) => setTab(value)}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger value="all">All Friends</TabsTrigger>
+                      <TabsTrigger value="incoming">Incoming</TabsTrigger>
+                      <TabsTrigger value="outgoing">Sent</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="all" className="mt-0">
+                      {friends && friends.length > 0 ? (
+                        <div className="space-y-4">
+                          {friends.map((friend: Friend) => (
+                            <div
+                              key={
+                                typeof friend === "object" ? friend._id : friend
+                              }
+                              className="flex items-center gap-3 p-3 rounded-md border border-border/50 bg-secondary/5"
+                            >
+                              <Avatar className="h-10 w-10">
+                                {typeof friend === "object" && friend.avatar ? (
+                                  <AvatarImage
+                                    src={friend.avatar}
+                                    alt={friend.name}
+                                  />
+                                ) : (
+                                  <AvatarFallback>
+                                    {typeof friend === "object" && friend.name
+                                      ? friend.name[0]
+                                      : "?"}
+                                  </AvatarFallback>
+                                )}
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="font-medium">
+                                  {typeof friend === "object"
+                                    ? friend.name
+                                    : `User ${friend}`}
+                                </div>
+                                {typeof friend === "object" &&
+                                  friend.jobTitle && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {friend.jobTitle}
+                                    </div>
+                                  )}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="ml-auto"
+                                onClick={() =>
+                                  router.push(
+                                    `/profiles/${friend._id as string}`
+                                  )
+                                }
+                              >
+                                View Profile
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                          <UserIcon
+                            size={48}
+                            className="text-muted-foreground/40 mb-3"
+                          />
+                          <p className="text-muted-foreground mb-2">
+                            No friends yet
+                          </p>
+                          <p className="text-sm text-muted-foreground max-w-md">
+                            Connect with other users by sending friend requests
+                            or accepting incoming requests
+                          </p>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="incoming" className="mt-0">
+                      {incoming && incoming.length > 0 ? (
+                        <div className="space-y-4">
+                          {incoming.map((request) => {
+                            // Extract the ID from the request object or use directly if it's a string
+                            const id =
+                              typeof request === "object"
+                                ? request._id || request.requester
+                                : request;
+                            const name =
+                              typeof request === "object" && request.requester
+                                ? request.requester
+                                : `User ${id.slice(-5)}`;
+
+                            return (
+                              <div
+                                key={id}
+                                className="flex items-center gap-3 p-3 rounded-md border border-border/50 bg-secondary/5"
+                              >
+                                <Avatar className="h-10 w-10">
+                                  <AvatarFallback>
+                                    {typeof name === "string" ? name[0] : "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="font-medium">{name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Wants to connect with you
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRespond(request.requester, true)
+                                    }
+                                    className="flex items-center gap-1"
+                                  >
+                                    <UserCheck size={14} />
+                                    <span>Accept</span>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRespond(request.requester, false)
+                                    }
+                                    className="flex items-center gap-1"
+                                  >
+                                    <UserMinus size={14} />
+                                    <span>Decline</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                          <Mail
+                            size={48}
+                            className="text-muted-foreground/40 mb-3"
+                          />
+                          <p className="text-muted-foreground mb-2">
+                            No incoming requests
+                          </p>
+                          <p className="text-sm text-muted-foreground max-w-md">
+                            You don't have any pending friend requests at the
+                            moment
+                          </p>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="outgoing" className="mt-0">
+                      {outgoing && outgoing.length > 0 ? (
+                        <div className="space-y-4">
+                          {outgoing.map((request) => {
+                            // Extract the ID from the request object or use directly if it's a string
+                            const id =
+                              typeof request === "object"
+                                ? request._id || request.recipient
+                                : request;
+                            const name =
+                              typeof request === "object" && request.recipient
+                                ? request.recipient
+                                : `User ${id.slice(-5)}`;
+
+                            return (
+                              <div
+                                key={id}
+                                className="flex items-center gap-3 p-3 rounded-md border border-border/50 bg-secondary/5"
+                              >
+                                <Avatar className="h-10 w-10">
+                                  <AvatarFallback>
+                                    {typeof name === "string" ? name[0] : "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="font-medium">{name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    Request sent
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleCancel(request.recipient)
+                                  }
+                                  className="flex items-center gap-1"
+                                >
+                                  <CircleX size={14} />
+                                  <span>Cancel</span>
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10 text-center">
+                          <UserPlus
+                            size={48}
+                            className="text-muted-foreground/40 mb-3"
+                          />
+                          <p className="text-muted-foreground mb-2">
+                            No outgoing requests
+                          </p>
+                          <p className="text-sm text-muted-foreground max-w-md">
+                            You haven't sent any friend requests yet
+                          </p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </div>

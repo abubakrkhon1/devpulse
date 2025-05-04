@@ -14,6 +14,7 @@ export interface User {
   lastActive: Date;
   twoFactorEnabled: boolean;
   loginDevices: LoginDevice[];
+  friends: [];
   createdAt: Date;
 }
 
@@ -63,5 +64,20 @@ export type OtherProfile = {
   lastActive: Date;
   avatar: string;
   isOnline: true;
+  friends: [];
   createdAt: Date;
+};
+
+export type Friend = {
+  _id: string;
+  name: string;
+  email: string;
+  jobTitle: string;
+  department: string;
+  role: string;
+  bio: string;
+  verified: boolean;
+  avatar: string;
+  isOnline: boolean;
+  lastActive: Date;
 };

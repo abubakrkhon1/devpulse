@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { goOnline } from "@/lib/dbActions";
 
 export async function POST(req: Request) {
-  const { userId } = await req.json();
+  const userId = await req.json();
   const res = await goOnline(userId);
 
   if (res.status === 200) {

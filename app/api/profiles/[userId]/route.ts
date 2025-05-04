@@ -21,3 +21,23 @@ export async function GET(
   // ⚠️ Must match what your hook reads: data.otherProfile
   return NextResponse.json({ otherProfile: result.profile });
 }
+
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ userId: string }> }
+) {
+  // await the dynamic params promise
+  const userId = await req.json();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+  }
+
+  const result = await fetchProfile(userId);
+  if (!result.profile) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // ⚠️ Must match what your hook reads: data.otherProfile
+  return NextResponse.json({ otherProfile: result.profile });
+}

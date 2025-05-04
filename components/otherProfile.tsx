@@ -43,6 +43,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import {
+  cancelFriendRequest,
+  respondFriendRequest,
+  sendFriendRequest,
+  useFriendRequests,
+} from "@/hooks/useFriends";
 
 const ViewUserProfile = ({
   profile,
@@ -69,19 +75,19 @@ const ViewUserProfile = ({
     {
       _id: "friend1",
       name: "Alex Johnson",
-      avatar: "/api/placeholder/36/36",
+      avatar: "",
       jobTitle: "Product Designer",
     },
     {
       _id: "friend2",
       name: "Sam Carter",
-      avatar: "/api/placeholder/36/36",
+      avatar: "",
       jobTitle: "Marketing Manager",
     },
     {
       _id: "friend3",
       name: "Taylor Smith",
-      avatar: "/api/placeholder/36/36",
+      avatar: "",
       jobTitle: "Frontend Developer",
     },
   ]);
@@ -91,8 +97,10 @@ const ViewUserProfile = ({
     // In a real app, you would fetch this from your API
     if (profile && currentUser) {
       // Mock check if users are friends
-      const mockFriendship = getMockFriendshipStatus(profile._id);
-      setFriendStatus(mockFriendship);
+      console.log(profile, currentUser);
+      const status = currentUser.friends.some((f) => f._id === profile._id);
+      console.log(status);
+      if (status) setFriendStatus("accepted");
     }
   }, [profile, currentUser]);
 
@@ -114,8 +122,6 @@ const ViewUserProfile = ({
   const handleFriendAction = (action: string) => {
     switch (action) {
       case "add":
-        setFriendStatus("pending");
-        showNotification("Friend request sent!", "success");
         break;
       case "accept":
         setFriendStatus("accepted");
@@ -130,8 +136,6 @@ const ViewUserProfile = ({
         showNotification("Friend removed", "warning");
         break;
       case "cancel":
-        setFriendStatus("none");
-        showNotification("Friend request cancelled", "warning");
         break;
       default:
         break;
@@ -152,6 +156,31 @@ const ViewUserProfile = ({
 
   // Check if user is online - in real app, this would use a proper online status system
   const { isOnline } = useOnlineStatus(profile?._id);
+
+  const {
+    incoming,
+    outgoing,
+    friendRequestError,
+    friendRequestLoading,
+    refresh,
+  } = useFriendRequests(currentUser?._id);
+
+  const handleSend = async (otherId: string) => {
+    await sendFriendRequest(currentUser?._id, otherId);
+    await refresh();
+    setFriendStatus("pending");
+    showNotification("Friend request sent!", "success");
+  };
+  const handleCancel = async (otherId: string) => {
+    await cancelFriendRequest(currentUser?._id, otherId);
+    await refresh();
+    setFriendStatus("none");
+    showNotification("Friend request cancelled", "warning");
+  };
+  const handleRespond = async (requester: string, accept: boolean) => {
+    await respondFriendRequest(requester, currentUser?._id, accept);
+    await refresh();
+  };
 
   if (loading)
     return (
@@ -262,7 +291,7 @@ const ViewUserProfile = ({
             <div className="flex flex-col gap-2 self-start w-full md:w-auto">
               {friendStatus === "none" && (
                 <Button
-                  onClick={() => handleFriendAction("add")}
+                  onClick={() => handleSend(profile._id)}
                   className="w-full md:w-auto flex items-center gap-2"
                 >
                   <UserPlus size={16} />
@@ -273,7 +302,7 @@ const ViewUserProfile = ({
               {friendStatus === "pending" && (
                 <Button
                   variant="outline"
-                  onClick={() => handleFriendAction("cancel")}
+                  onClick={() => handleCancel(profile._id)}
                   className="w-full md:w-auto flex items-center gap-2"
                 >
                   <UserMinus size={16} />
