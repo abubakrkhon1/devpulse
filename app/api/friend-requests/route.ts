@@ -2,6 +2,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongo";
+import { getEmitSocket } from "@/lib/socketClient";
+
+// Get pending friend requests
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const userId = url.searchParams.get("userId");
+  if (!userId) return NextResponse.json({ error: "Missing" }, { status: 400 });
+  const client = await clientPromise;
+  const db = client.db("devpulse");
+  // incoming
+  const incoming = await db
+    .collection("friend-requests")
+    .find({ recipient: new ObjectId(userId), status: "pending" })
+    .toArray();
+  // outgoing
+  const outgoing = await db
+    .collection("friend-requests")
+    .find({ requester: new ObjectId(userId), status: "pending" })
+    .toArray();
+  return NextResponse.json({ incoming, outgoing });
+}
 
 export async function POST(req: NextRequest) {
   const { requester, recipient } = await req.json();
@@ -31,48 +52,17 @@ export async function POST(req: NextRequest) {
     status: "pending",
     createdAt: new Date(),
   });
-  return NextResponse.json({ success: true });
-}
 
-// app/api/friend-requests/route.ts (add)
-export async function DELETE(req: NextRequest) {
-  const { requester, recipient } = await req.json();
-  const client = await clientPromise;
-  await client
-    .db("devpulse")
-    .collection("friend-requests")
-    .deleteOne({
-      requester: new ObjectId(requester),
-      recipient: new ObjectId(recipient),
-      status: "pending",
-    });
-  return NextResponse.json({ success: true });
-}
+  const ioClient = getEmitSocket();
+  ioClient.emit("friend-request-created", { requester, recipient });
 
-// Get pending friend requests
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const userId = url.searchParams.get("userId");
-  if (!userId) return NextResponse.json({ error: "Missing" }, { status: 400 });
-  const client = await clientPromise;
-  const db = client.db("devpulse");
-  // incoming
-  const incoming = await db
-    .collection("friend-requests")
-    .find({ recipient: new ObjectId(userId), status: "pending" })
-    .toArray();
-  // outgoing
-  const outgoing = await db
-    .collection("friend-requests")
-    .find({ requester: new ObjectId(userId), status: "pending" })
-    .toArray();
-  return NextResponse.json({ incoming, outgoing });
+  return NextResponse.json({ success: true });
 }
 
 // Accept friend request
 export async function PATCH(req: NextRequest) {
   const { requester, recipient, accept } = await req.json();
-  console.log(requester,recipient,accept)
+  console.log(requester, recipient, accept);
   const client = await clientPromise;
   const db = client.db("devpulse");
   const filter = {
@@ -130,5 +120,31 @@ export async function PATCH(req: NextRequest) {
       .collection("friend-requests")
       .updateOne(filter, { $set: { status: "rejected" } });
   }
+
+  const ioClient = getEmitSocket();
+  ioClient.emit("friend-request-updated", {
+    requester,
+    recipient,
+    status: accept ? "accepted" : "rejected",
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+// app/api/friend-requests/route.ts (add)
+export async function DELETE(req: NextRequest) {
+  const { requester, recipient } = await req.json();
+  const client = await clientPromise;
+  await client
+    .db("devpulse")
+    .collection("friend-requests")
+    .deleteOne({
+      requester: new ObjectId(requester),
+      recipient: new ObjectId(recipient),
+      status: "pending",
+    });
+
+  const ioClient = getEmitSocket();
+  ioClient.emit("friend-request-cancelled", { requester, recipient });
   return NextResponse.json({ success: true });
 }

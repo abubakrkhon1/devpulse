@@ -14,25 +14,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { login } from "@/lib/api/auth";
+import { useAuth } from "@/store/userAuthStore";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [loading, setLoading] = useState(false);
+  const { user, loading, setUser, setLoading } = useAuth.getState();
+  const [buttonLoading, setButtonLoading] = useState(false);
+
   const router = useRouter();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
@@ -44,47 +40,47 @@ export function LoginForm({
   });
 
   // 2. Define a submit handler.
+
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
+    setButtonLoading(true);
     setLoading(true);
-  
-    const res = await fetch("/api/auth/sign-in", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const data = await res.json();
-    console.log(data)
-  
-    if (!res.ok) {
-      if (res.status === 401 && data.message === "Passwords do not match!") {
-        form.setError("password", {
-          type: "manual",
-          message: data.message,
-        });
-      } else {
-        form.setError("password", {
-          type: "manual",
-          message: data.message || "Something went wrong",
-        });
-      }
-    } else {
-      // ✅ If login success → Update user to Online
-      try {
-        await fetch("/api/profile/online", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: data.userId }), // assuming server returns userId
-        });
-      } catch (error) {
-        console.error("Failed to set user online", error);
-      }
-  
-      router.push("/dashboard");
+
+    const res = await login(values);
+
+    if (!res.success) {
+      form.setError("password", {
+        type: "manual",
+        message: res.error || "Login failed",
+      });
+      setLoading(false); // 🛑 stop loading here
+      setButtonLoading(false);
+      return;
     }
-  
-    setLoading(false);
+
+    // login success, now fetch profile
+    try {
+      const meRes = await fetch("http://localhost:3005/api/auth/me", {
+        credentials: "include",
+      });
+
+      const data = await meRes.json();
+
+      if (data.user) {
+        setUser(data.user); // ✅ set Zustand user
+        setLoading(false); // ✅ stop loading
+        router.push("/dashboard"); // ✅ proceed
+        setButtonLoading(false);
+      } else {
+        setLoading(false);
+        setButtonLoading(false);
+        console.warn("❌ No user returned from /me");
+      }
+    } catch (err) {
+      setLoading(false);
+      setButtonLoading(false);
+      console.error("❌ Error loading user after login:", err);
+    }
   }
-  
 
   return (
     <div className={cn("flex flex-col gap-6 ", className)} {...props}>
@@ -176,11 +172,11 @@ export function LoginForm({
                   <Button
                     type="submit"
                     className={`w-full bg-indigo-500 hover:bg-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      loading ? "animate-pulse" : ""
+                      buttonLoading ? "animate-pulse" : ""
                     }`}
-                    disabled={loading}
+                    disabled={buttonLoading}
                   >
-                    {loading ? "Loading..." : "Sign In"}
+                    {buttonLoading ? "Loading..." : "Sign In"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">

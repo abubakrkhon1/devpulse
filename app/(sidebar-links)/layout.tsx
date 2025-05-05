@@ -3,11 +3,10 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useSocket } from "@/hooks/useSocket";
-import { useUser } from "@/hooks/useAuthedUser";
-import { User } from "@/types/types";
-import { useEffect } from "react";
-import { useSocketStore } from "@/store/userOnlineStore";
+import { useRouter } from "next/navigation";
+import { useTokenUser } from "@/hooks/useTokenUser";
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 // Create the query client (lazy-initialize to avoid SSR issues)
 
@@ -16,10 +15,18 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { user } = useUser();
-  const userId = user?._id;
-  const socket = useSocket(userId);
-  const online = useSocketStore(s => s.onlineUsers);
+  const { user, loading, error } = useTokenUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (error) {
+      router.push("/login");
+    }
+  }, [error, router]);
+
+  if (loading) return <div className="w-full h-screen flex items-center justify-center animate-pulse">Loading...</div>;
+  if (!user) return null;
+
   return (
     <SidebarProvider
       style={

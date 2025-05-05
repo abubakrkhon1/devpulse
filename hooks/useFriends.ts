@@ -1,5 +1,6 @@
 // hooks/useFriends.ts
 import { useState, useEffect, useCallback } from "react";
+import { io, Socket } from "socket.io-client";
 
 interface FriendRequest {
   _id: string;
@@ -12,21 +13,18 @@ interface FriendRequest {
 export function useFriendRequests(userId?: string) {
   const [incoming, setIncoming] = useState<FriendRequest[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
-  const [friendRequestLoading, setLoading] = useState(false);
-  const [friendRequestError, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string|null>(null);
 
   const fetchRequests = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    setError(null);
     try {
-      const res = await fetch(
-        `/api/friend-requests?userId=${encodeURIComponent(userId)}`
-      );
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const res = await fetch(`/api/friend-requests?userId=${userId}`);
+      if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
-      setIncoming(data.incoming ?? []);
-      setOutgoing(data.outgoing ?? []);
+      setIncoming(data.incoming);
+      setOutgoing(data.outgoing);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -36,15 +34,20 @@ export function useFriendRequests(userId?: string) {
 
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
 
-  return {
-    incoming,
-    outgoing,
-    friendRequestLoading,
-    friendRequestError,
-    refresh: fetchRequests,
-  };
+    // connect socket
+    const socket = io("http://localhost:3001", { query: { userId } });
+    // whenever a friend‐request event comes in, re‐fetch
+    socket.on("friend-request-created", fetchRequests);
+    socket.on("friend-request-updated", fetchRequests);
+    socket.on("friend-request-cancelled", fetchRequests);
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [fetchRequests, userId]);
+
+  return { incoming, outgoing, loading, error, refresh: fetchRequests };
 }
 
 // plain functions for mutations
@@ -82,7 +85,7 @@ export async function respondFriendRequest(
 ) {
   console.log(requester, recipient, accept);
   if (!requester || !recipient) return;
-  console.log("requester:",requester," recipient:",recipient,accept)
+  console.log("requester:", requester, " recipient:", recipient, accept);
 
   const res = await fetch("/api/friend-requests", {
     method: "PATCH",

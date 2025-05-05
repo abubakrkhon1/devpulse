@@ -4,9 +4,8 @@
 import { useParams } from "next/navigation";
 import OtherProfilePage from "@/components/otherProfile";
 import UserProfile from "@/components/userProfile";
-import { useUser } from "@/hooks/useAuthedUser";
 import { useOtherProfile } from "@/hooks/useOtherProfile";
-import { OtherProfile } from "@/types/types";
+import { useTokenUser } from "@/hooks/useTokenUser";
 
 export default function AccountPage() {
   // 1) grab the dynamic segment:
@@ -18,7 +17,7 @@ export default function AccountPage() {
   );
 
   // 3) fetch your own auth’d user
-  const { user, loading: authLoading, error: authError } = useUser();
+  const { user, loading: authLoading, error: authError } = useTokenUser();
 
   const loadingProp = authLoading || profileLoading;
 
@@ -45,7 +44,7 @@ export default function AccountPage() {
   ) : (
     <OtherProfilePage
       profile={profile!}
-      currentUser={user}
+      currentUser={user!}
       loading={loadingProp}
       error={errorProp}
     />

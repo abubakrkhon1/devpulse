@@ -2,13 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
-  Plus,
-  ChevronRight,
   Clock,
   CheckCircle,
-  Circle,
   AlertCircle,
-  X,
   Edit2,
   Trash2,
   Search,
@@ -19,8 +15,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Project } from "@/types/types";
 import { formatDate } from "@/lib/utils";
+import { useTokenUser } from "@/hooks/useTokenUser";
 
 export default function ProjectsDashboard() {
+  const { user } = useTokenUser();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -33,11 +31,18 @@ export default function ProjectsDashboard() {
 
   // Fetch projects once
   useEffect(() => {
+    if (!user?._id) return;
     async function fetchProjects() {
       try {
         setLoading(true);
 
-        const res = await fetch("/api/projects/fetchProjects");
+        const res = await fetch(
+          `http://localhost:3005/api/projects?userId=${user?._id}`,
+          {
+            credentials: "include",
+          }
+        );
+        console.log(res);
         if (!res.ok) throw new Error("Failed to load projects");
 
         const data = await res.json();
@@ -52,7 +57,7 @@ export default function ProjectsDashboard() {
       }
     }
     fetchProjects();
-  }, []);
+  }, [user?._id]);
 
   // Filtered list based on tab and search
   const filteredProjects = projects.filter((project) => {
@@ -82,20 +87,15 @@ export default function ProjectsDashboard() {
     }
   };
 
-  const getPriorityClass = (priority: Project["priority"]) => {
-    switch (priority) {
-      case "urgent":
-        return "bg-red-200 text-red-900";
-      case "high":
-        return "bg-red-100 text-red-800";
-      case "medium":
-        return "bg-amber-100 text-amber-800";
-      case "low":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const priorityClassMap: any = {
+    urgent: "bg-red-200 text-red-900",
+    high: "bg-red-100 text-red-800",
+    medium: "bg-amber-100 text-amber-800",
+    low: "bg-blue-100 text-blue-800",
   };
+
+  const getPriorityClass = (priority: any) =>
+    priorityClassMap[priority] || "bg-gray-100 text-gray-800";
 
   const getStatusIcon = (status: Project["status"]) => {
     switch (status) {

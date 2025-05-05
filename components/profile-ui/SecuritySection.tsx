@@ -17,14 +17,13 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useState } from "react";
-import { updatePassword } from "@/lib/dbActions";
-import { useUser } from "@/hooks/useAuthedUser";
+import { useTokenUser } from "@/hooks/useTokenUser";
 
 export default function SecuritySection() {
   const [form, setForm] = useState({ password: "", newPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { user } = useUser();
+  const { user } = useTokenUser();
   const [open, setOpen] = useState(false);
 
   const handleNewPass = async (e: any) => {

@@ -46,7 +46,6 @@ import NotificationSection from "@/components/profile-ui/NotificationSection";
 import BillingSection from "@/components/profile-ui/BillingSection";
 import { formatDate } from "@/lib/utils";
 import { Friend, User } from "@/types/types";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
@@ -110,7 +109,7 @@ export default function UserProfile({
     }
   }, [user]);
 
-  const { isOnline, onlineUsers } = useOnlineStatus(user?._id);
+  const isOnline = false;
 
   const [tab, setTab] = useState("all");
 
@@ -167,8 +166,6 @@ export default function UserProfile({
   const {
     incoming,
     outgoing,
-    friendRequestError,
-    friendRequestLoading,
     refresh,
   } = useFriendRequests(user?._id);
 
@@ -259,6 +256,7 @@ export default function UserProfile({
             <Button
               variant="outline"
               className="hidden md:flex gap-2 items-center self-start"
+              onClick={()=>router.push("/logout")}
             >
               <LogOut size={16} />
               Sign Out

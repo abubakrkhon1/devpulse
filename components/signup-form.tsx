@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { register } from "@/lib/api/auth";
 
 // assume your zod schema now includes:
 // name, email, password, confirmPassword, jobTitle, department, role, bio, twoFactorEnabled
@@ -54,22 +55,26 @@ export function SignUpForm({
   });
 
   const onSubmit = async (values: z.infer<typeof signUpFormSchema>) => {
+    const valuesfixed = {
+      ...values,
+      bio: values.bio ?? "",
+    };
+
     setLoading(true);
-    const res = await fetch("/api/auth/sign-up", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const data = await res.json();
+
+    const res = await register(valuesfixed);
+    console.log(res);
 
     if (!res.ok) {
       form.setError("confirmPassword", {
         type: "manual",
-        message: data.message || "Something went wrong",
+        message: res.message || "Something went wrong",
       });
     } else {
       router.push("/login");
+      setLoading(false);
     }
+
     setLoading(false);
   };
 

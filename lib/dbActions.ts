@@ -10,53 +10,6 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { ObjectId } from "mongodb";
 
-export async function signUp(data: User) {
-  const {
-    name,
-    email,
-    password,
-    jobTitle,
-    department,
-    role,
-    bio,
-    twoFactorEnabled,
-    verified,
-  } = data;
-
-  try {
-    const client = await clientPromise;
-    const db = client.db("devpulse");
-
-    const existingUser = await db.collection("users").findOne({ email });
-
-    if (existingUser) return { message: "User already exists", status: 400 };
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await db.collection("users").insertOne({
-      name,
-      email,
-      password: hashedPassword,
-      jobTitle,
-      department,
-      role,
-      bio,
-      twoFactorEnabled,
-      verified,
-      avatar: "https://github.com/shadcn.png",
-      friends: [],
-      createdAt: new Date(),
-    });
-
-    return {
-      message: "User sucessfully created!",
-      result,
-      status: 200,
-    };
-  } catch (error) {
-    return { message: "Internal Server Error", status: 500 };
-  }
-}
-
 export async function signIn(data: User, deviceData: LoginDevice) {
   const { email, password } = data;
   try {

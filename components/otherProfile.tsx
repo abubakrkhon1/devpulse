@@ -9,40 +9,25 @@ import {
   User as UserIcon,
   Briefcase,
   Calendar,
-  Mail,
   CheckCircle,
   Dot,
-  MessageCircle,
   UserPlus,
   UserCheck,
   UserMinus,
-  Clock,
   Users,
   ArrowLeft,
   Share2,
   Globe,
-  MapPin,
   School,
   Coffee,
   BookOpen,
   Heart,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
-import { Friend, OtherProfile, User } from "@/types/types";
+import { OtherProfile, User } from "@/types/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import {
   cancelFriendRequest,
   removeFriend,
@@ -98,13 +83,15 @@ const ViewUserProfile = ({
   useEffect(() => {
     // In a real app, you would fetch this from your API
     if (profile && currentUser) {
-      // Mock check if users are friends
-      console.log(profile, currentUser);
-      const status = currentUser.friends.some(
-        (f: Friend) => f._id === profile._id
-      );
-      console.log(status);
-      if (status) setFriendStatus("accepted");
+      if (outgoing.some((r) => r.recipient === profile._id)) {
+        setFriendStatus("pending");
+      } else if (incoming.some((r) => r.requester === profile._id)) {
+        setFriendStatus("request");
+      } else if (
+        currentUser?.friends?.some((f: OtherProfile) => f._id === profile._id)
+      ) {
+        setFriendStatus("accepted");
+      }
     }
   }, [profile, currentUser]);
 
@@ -155,40 +142,35 @@ const ViewUserProfile = ({
   };
 
   // Check if user is online - in real app, this would use a proper online status system
-  const { isOnline } = useOnlineStatus(profile?._id);
+  const isOnline = false
 
-  const {
-    incoming,
-    outgoing,
-    friendRequestError,
-    friendRequestLoading,
-    refresh,
-  } = useFriendRequests(currentUser?._id);
+  const { incoming, outgoing, refresh } = useFriendRequests(currentUser?._id);
 
-  const handleSend = async (otherId: string) => {
-    await sendFriendRequest(currentUser?._id, otherId);
-    await refresh();
-    setFriendStatus("pending");
-    showNotification("Friend request sent!", "success");
+  const handleSend = async (profileId: string) => {
+    await sendFriendRequest(
+      currentUser?._id,
+      profileId
+    ); /* UI now pending... */
   };
-
-  const handleCancel = async (otherId: string) => {
-    await cancelFriendRequest(currentUser?._id, otherId);
-    await refresh();
-    setFriendStatus("none");
-    showNotification("Friend request cancelled", "warning");
+  const handleAccept = async (profileId: string) => {
+    await respondFriendRequest(
+      profileId,
+      currentUser?._id,
+      true
+    ); /* UI now accepted... */
   };
-
-  const handleRespond = async (requester: string, accept: boolean) => {
-    await respondFriendRequest(requester, currentUser?._id, accept);
-    await refresh();
+  const handleDecline = async (profileId: string) => {
+    await respondFriendRequest(
+      profileId,
+      currentUser?._id,
+      false
+    ); /* UI now none... */
   };
-
-  const handleFriendRemove = async (friendId: any) => {
-    await removeFriend(currentUser?._id, friendId);
-    await refresh();
-    setFriendStatus("none");
-    showNotification("Friend removed", "warning");
+  const handleCancel = async (profileId: string) => {
+    await cancelFriendRequest(currentUser?._id, profileId); /* UI now none... */
+  };
+  const handleFriendRemove = async (profileId: string) => {
+    await removeFriend(currentUser?._id, profileId);
   };
 
   if (loading)

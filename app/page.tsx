@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/hooks/useAuthedUser";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,10 +24,11 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
+import { useTokenUser } from "@/hooks/useTokenUser";
 
 export default function ProjectAppLanding() {
   const router = useRouter();
-  const { user, loading, error } = useUser();
+  const { user } = useTokenUser();
   const heroBtnClick = () => {
     if (user) router.push("/dashboard");
     else router.push("/sign-up");
